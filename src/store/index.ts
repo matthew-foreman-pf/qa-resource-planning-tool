@@ -17,6 +17,7 @@ import {
   generateSeedTimeOffs,
   basePlanScenario,
 } from '../db/seed';
+import { toDateStr, today, getWeekdaysInRangeStr, getWeekStart } from '../utils/dates';
 
 interface AppState {
   // Data
@@ -29,12 +30,27 @@ interface AppState {
   timeOffs: TimeOff[];
 
   // UI state
-  currentScreen: 'roster' | 'dashboard' | 'editPlan' | 'workItems';
+  currentScreen: 'roster' | 'dashboard' | 'editPlan' | 'workItems' | 'people';
   selectedCellInfo: {
     personId: string;
     date: string;
   } | null;
-  sidePanelOpen: boolean;
+  dayDrawerOpen: boolean;
+  selectedPersonId: string | null;
+  personDrawerOpen: boolean;
+  showArchivedPeople: boolean;
+  podFilterIds: string[]; // empty = all pods
+  currentUserId: string | null;
+
+  // Add person drawer
+  addPersonDrawerOpen: boolean;
+
+  // Edit mode (multi-select)
+  editMode: boolean;
+  selectedCells: Set<string>; // "personId|date" keys
+
+  // Active week for pod breakdown chips
+  activeWeekStartDate: string; // YYYY-MM-DD (Monday)
 
   // Actions
   initialize: () => Promise<void>;
@@ -42,9 +58,23 @@ interface AppState {
   setScenario: (scenarioId: string) => void;
   loadScenarioData: (scenarioId: string) => Promise<void>;
 
-  // Cell selection
+  // Cell / Day drawer selection
   selectCell: (personId: string, date: string) => void;
-  closeSidePanel: () => void;
+  closeDayDrawer: () => void;
+
+  // Person drawer
+  openPersonDrawer: (personId: string) => void;
+  closePersonDrawer: () => void;
+
+  // Person CRUD
+  addPerson: (person: Person) => Promise<void>;
+  updatePerson: (person: Person) => Promise<void>;
+  archivePerson: (personId: string) => Promise<void>;
+  restorePerson: (personId: string) => Promise<void>;
+
+  // Add person drawer
+  openAddPersonDrawer: () => void;
+  closeAddPersonDrawer: () => void;
 
   // Work item CRUD
   addWorkItem: (wi: WorkItem) => Promise<void>;
@@ -53,7 +83,19 @@ interface AppState {
 
   // Allocation CRUD
   addAllocations: (allocs: Allocation[]) => Promise<void>;
+  removeAllocation: (id: string) => Promise<void>;
+  setAllocationForDay: (personId: string, date: string, workItemId: string) => Promise<void>;
+  setAllocationForRange: (personId: string, workItemId: string, startDate: string, endDate: string, weekdaysOnly: boolean) => Promise<void>;
   clearAllocations: (personId: string, startDate: string, endDate: string) => Promise<void>;
+  copyWeekAllocations: (personId: string, sourceWeekStart: string, targetWeekStart: string) => Promise<void>;
+
+  // Bulk unassign / reassign
+  deleteAllocationsByIds: (ids: string[]) => Promise<void>;
+  bulkReassign: (
+    updateIds: string[],
+    newWorkItemId: string,
+    deleteConflictIds: string[],
+  ) => Promise<void>;
 
   // Time off
   addTimeOff: (to: TimeOff) => Promise<void>;
@@ -61,6 +103,18 @@ interface AppState {
 
   // Scenario management
   duplicateScenario: (sourceId: string, newName: string) => Promise<string>;
+
+  // Edit mode (multi-select)
+  setEditMode: (on: boolean) => void;
+  toggleCellSelection: (personId: string, date: string) => void;
+  clearSelection: () => void;
+  batchAssign: (workItemId: string) => Promise<void>;
+  batchClear: () => Promise<void>;
+
+  // UI toggles
+  setShowArchivedPeople: (show: boolean) => void;
+  setPodFilterIds: (ids: string[]) => void;
+  setActiveWeekStartDate: (date: string) => void;
 
   // Import/Export
   exportData: () => Promise<AppData>;
@@ -77,7 +131,16 @@ export const useStore = create<AppState>((set, get) => ({
   timeOffs: [],
   currentScreen: 'roster',
   selectedCellInfo: null,
-  sidePanelOpen: false,
+  dayDrawerOpen: false,
+  selectedPersonId: null,
+  personDrawerOpen: false,
+  showArchivedPeople: false,
+  podFilterIds: [],
+  currentUserId: null,
+  addPersonDrawerOpen: false,
+  editMode: false,
+  selectedCells: new Set<string>(),
+  activeWeekStartDate: toDateStr(getWeekStart(today())),
 
   initialize: async () => {
     // Check if DB has data
@@ -108,7 +171,17 @@ export const useStore = create<AppState>((set, get) => ({
     const people = await db.people.toArray();
     const scenarios = await db.scenarios.toArray();
 
-    set({ pods, people, scenarios });
+    // Hardcoded currentUserId for testing (Emily = QA Lead sees all)
+    const currentUserId = 'person-emily';
+    const currentUser = people.find((p) => p.id === currentUserId);
+
+    // Default pod filter based on current user role
+    let podFilterIds: string[] = [];
+    if (currentUser?.role === 'pod_lead' && currentUser.defaultPodFilterIds?.length) {
+      podFilterIds = currentUser.defaultPodFilterIds;
+    }
+
+    set({ pods, people, scenarios, currentUserId, podFilterIds });
     await get().loadScenarioData('scenario-base');
   },
 
@@ -135,12 +208,60 @@ export const useStore = create<AppState>((set, get) => ({
     set({ workItems, allocations, timeOffs, currentScenarioId: scenarioId });
   },
 
-  selectCell: (personId, date) => {
-    set({ selectedCellInfo: { personId, date }, sidePanelOpen: true });
+  addPerson: async (person) => {
+    await db.people.put(person);
+    set((s) => ({ people: [...s.people, person] }));
   },
 
-  closeSidePanel: () => {
-    set({ selectedCellInfo: null, sidePanelOpen: false });
+  openAddPersonDrawer: () => {
+    set({ addPersonDrawerOpen: true, personDrawerOpen: false, selectedPersonId: null, dayDrawerOpen: false, selectedCellInfo: null });
+  },
+
+  closeAddPersonDrawer: () => {
+    set({ addPersonDrawerOpen: false });
+  },
+
+  updatePerson: async (person) => {
+    await db.people.put(person);
+    set((s) => ({
+      people: s.people.map((p) => (p.id === person.id ? person : p)),
+    }));
+  },
+
+  archivePerson: async (personId) => {
+    const person = get().people.find((p) => p.id === personId);
+    if (!person) return;
+    const updated = { ...person, status: 'archived' as const, archivedAt: toDateStr(today()) };
+    await db.people.put(updated);
+    set((s) => ({
+      people: s.people.map((p) => (p.id === personId ? updated : p)),
+    }));
+  },
+
+  restorePerson: async (personId) => {
+    const person = get().people.find((p) => p.id === personId);
+    if (!person) return;
+    const updated = { ...person, status: 'active' as const, archivedAt: undefined };
+    await db.people.put(updated);
+    set((s) => ({
+      people: s.people.map((p) => (p.id === personId ? updated : p)),
+    }));
+  },
+
+  selectCell: (personId, date) => {
+    set({ selectedCellInfo: { personId, date }, dayDrawerOpen: true, personDrawerOpen: false, selectedPersonId: null });
+  },
+
+  closeDayDrawer: () => {
+    set({ selectedCellInfo: null, dayDrawerOpen: false });
+  },
+
+  openPersonDrawer: (personId) => {
+    set({ selectedPersonId: personId, personDrawerOpen: true, selectedCellInfo: null, dayDrawerOpen: false });
+  },
+
+  closePersonDrawer: () => {
+    set({ selectedPersonId: null, personDrawerOpen: false });
   },
 
   addWorkItem: async (wi) => {
@@ -160,7 +281,6 @@ export const useStore = create<AppState>((set, get) => ({
   deleteWorkItem: async (id) => {
     const scenarioId = get().currentScenarioId;
     await db.workItems.delete(id);
-    // Also delete associated allocations
     const toDelete = await db.allocations
       .where('[scenarioId+workItemId]')
       .equals([scenarioId, id])
@@ -178,6 +298,56 @@ export const useStore = create<AppState>((set, get) => ({
       allocs.map((a) => ({ ...a, scenarioId }))
     );
     set((s) => ({ allocations: [...s.allocations, ...allocs] }));
+  },
+
+  removeAllocation: async (id) => {
+    await db.allocations.delete(id);
+    set((s) => ({
+      allocations: s.allocations.filter((a) => a.id !== id),
+    }));
+  },
+
+  setAllocationForDay: async (personId, date, workItemId) => {
+    const scenarioId = get().currentScenarioId;
+    const newAlloc: Allocation = {
+      id: crypto.randomUUID(),
+      personId,
+      workItemId,
+      date,
+      days: 1,
+    };
+    await db.allocations.put({ ...newAlloc, scenarioId });
+    set((s) => ({ allocations: [...s.allocations, newAlloc] }));
+  },
+
+  setAllocationForRange: async (personId, workItemId, startDate, endDate, weekdaysOnly) => {
+    const scenarioId = get().currentScenarioId;
+    const dates = weekdaysOnly
+      ? getWeekdaysInRangeStr(startDate, endDate)
+      : (() => {
+          const result: string[] = [];
+          const s = new Date(startDate);
+          const e = new Date(endDate);
+          for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+            result.push(toDateStr(new Date(d)));
+          }
+          return result;
+        })();
+
+    const allocs: Allocation[] = dates.map((date) => ({
+      id: crypto.randomUUID(),
+      personId,
+      workItemId,
+      date,
+      days: 1,
+    }));
+
+    if (allocs.length > 0) {
+      await db.allocations.bulkPut(
+        allocs.map((a) => ({ ...a, scenarioId }))
+      );
+      set((s) => ({ allocations: [...s.allocations, ...allocs] }));
+    }
   },
 
   clearAllocations: async (personId, startDate, endDate) => {
@@ -198,6 +368,107 @@ export const useStore = create<AppState>((set, get) => ({
     }));
   },
 
+  copyWeekAllocations: async (personId, sourceWeekStart, targetWeekStart) => {
+    const scenarioId = get().currentScenarioId;
+    // Get source week weekdays (Mon-Fri)
+    const srcEnd = new Date(sourceWeekStart);
+    srcEnd.setDate(srcEnd.getDate() + 4); // Friday
+    const srcDays = getWeekdaysInRangeStr(sourceWeekStart, toDateStr(srcEnd));
+
+    const tgtEnd = new Date(targetWeekStart);
+    tgtEnd.setDate(tgtEnd.getDate() + 4);
+    const tgtDays = getWeekdaysInRangeStr(targetWeekStart, toDateStr(tgtEnd));
+
+    // Get allocations for this person in source week
+    const allAllocs = await db.allocations
+      .where('[scenarioId+personId]')
+      .equals([scenarioId, personId])
+      .toArray();
+
+    const srcAllocs = allAllocs.filter((a) => srcDays.includes(a.date));
+
+    // Map source day index -> target day
+    const dayMap: Record<string, string> = {};
+    srcDays.forEach((d, i) => {
+      if (i < tgtDays.length) dayMap[d] = tgtDays[i];
+    });
+
+    // Clear existing target week allocations first
+    const tgtExisting = allAllocs.filter((a) => tgtDays.includes(a.date));
+    if (tgtExisting.length > 0) {
+      await db.allocations.bulkDelete(tgtExisting.map((a) => a.id));
+    }
+
+    // Create new allocations
+    const newAllocs: Allocation[] = srcAllocs
+      .filter((a) => dayMap[a.date])
+      .map((a) => ({
+        id: crypto.randomUUID(),
+        personId: a.personId,
+        workItemId: a.workItemId,
+        date: dayMap[a.date],
+        days: a.days,
+      }));
+
+    if (newAllocs.length > 0) {
+      await db.allocations.bulkPut(
+        newAllocs.map((a) => ({ ...a, scenarioId }))
+      );
+    }
+
+    // Reload to get clean state
+    const deleteIds = new Set(tgtExisting.map((a) => a.id));
+    set((s) => ({
+      allocations: [
+        ...s.allocations.filter((a) => !deleteIds.has(a.id)),
+        ...newAllocs,
+      ],
+    }));
+  },
+
+  deleteAllocationsByIds: async (ids) => {
+    if (ids.length === 0) return;
+    await db.allocations.bulkDelete(ids);
+    const deleteSet = new Set(ids);
+    set((s) => ({
+      allocations: s.allocations.filter((a) => !deleteSet.has(a.id)),
+    }));
+  },
+
+  bulkReassign: async (updateIds, newWorkItemId, deleteConflictIds) => {
+    const scenarioId = get().currentScenarioId;
+
+    // 1. Delete conflicting allocations at destination (replace mode)
+    if (deleteConflictIds.length > 0) {
+      await db.allocations.bulkDelete(deleteConflictIds);
+    }
+
+    // 2. Update candidate allocations' workItemId in Dexie
+    const updateSet = new Set(updateIds);
+    if (updateIds.length > 0) {
+      const dbAllocs = await db.allocations
+        .where('scenarioId')
+        .equals(scenarioId)
+        .toArray();
+      const toUpdate = dbAllocs.filter((a) => updateSet.has(a.id));
+      await db.allocations.bulkPut(
+        toUpdate.map((a) => ({ ...a, workItemId: newWorkItemId }))
+      );
+    }
+
+    // 3. Update Zustand state in one pass
+    const deleteSet = new Set(deleteConflictIds);
+    set((s) => ({
+      allocations: s.allocations
+        .filter((a) => !deleteSet.has(a.id))
+        .map((a) =>
+          updateSet.has(a.id)
+            ? { ...a, workItemId: newWorkItemId }
+            : a
+        ),
+    }));
+  },
+
   addTimeOff: async (to) => {
     const scenarioId = get().currentScenarioId;
     await db.timeOffs.put({ ...to, scenarioId });
@@ -215,7 +486,6 @@ export const useStore = create<AppState>((set, get) => ({
 
     await db.scenarios.put(newScenario);
 
-    // Copy work items
     const srcWorkItems = await db.workItems
       .where('scenarioId')
       .equals(sourceId)
@@ -226,7 +496,6 @@ export const useStore = create<AppState>((set, get) => ({
       scenarioId: newId,
     }));
 
-    // Build a map of old work item IDs to new IDs
     const wiIdMap: Record<string, string> = {};
     srcWorkItems.forEach((old, i) => {
       wiIdMap[old.id] = newWorkItems[i].id;
@@ -234,7 +503,6 @@ export const useStore = create<AppState>((set, get) => ({
 
     await db.workItems.bulkPut(newWorkItems);
 
-    // Copy allocations
     const srcAllocs = await db.allocations
       .where('scenarioId')
       .equals(sourceId)
@@ -248,7 +516,6 @@ export const useStore = create<AppState>((set, get) => ({
       }))
     );
 
-    // Copy time offs
     const srcTimeOffs = await db.timeOffs
       .where('scenarioId')
       .equals(sourceId)
@@ -264,6 +531,81 @@ export const useStore = create<AppState>((set, get) => ({
     set((s) => ({ scenarios: [...s.scenarios, newScenario] }));
     return newId;
   },
+
+  setEditMode: (on) => {
+    set({ editMode: on, selectedCells: new Set<string>() });
+    // Close any open drawers when entering edit mode
+    if (on) {
+      set({ dayDrawerOpen: false, selectedCellInfo: null, personDrawerOpen: false, selectedPersonId: null });
+    }
+  },
+
+  toggleCellSelection: (personId, date) => {
+    set((s) => {
+      const key = `${personId}|${date}`;
+      const next = new Set(s.selectedCells);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return { selectedCells: next };
+    });
+  },
+
+  clearSelection: () => {
+    set({ selectedCells: new Set<string>() });
+  },
+
+  batchAssign: async (workItemId) => {
+    const { selectedCells, currentScenarioId } = get();
+    if (selectedCells.size === 0) return;
+
+    const scenarioId = currentScenarioId;
+    const allocs: Allocation[] = [];
+    for (const key of selectedCells) {
+      const [personId, date] = key.split('|');
+      allocs.push({
+        id: crypto.randomUUID(),
+        personId,
+        workItemId,
+        date,
+        days: 1,
+      });
+    }
+
+    await db.allocations.bulkPut(
+      allocs.map((a) => ({ ...a, scenarioId }))
+    );
+    set((s) => ({
+      allocations: [...s.allocations, ...allocs],
+      selectedCells: new Set<string>(),
+    }));
+  },
+
+  batchClear: async () => {
+    const { selectedCells, allocations, currentScenarioId } = get();
+    if (selectedCells.size === 0) return;
+
+    // Find all allocation IDs that match the selected cells
+    const toDelete = allocations.filter((a) =>
+      selectedCells.has(`${a.personId}|${a.date}`)
+    );
+
+    if (toDelete.length > 0) {
+      await db.allocations.bulkDelete(toDelete.map((a) => a.id));
+    }
+
+    const deleteIds = new Set(toDelete.map((a) => a.id));
+    set((s) => ({
+      allocations: s.allocations.filter((a) => !deleteIds.has(a.id)),
+      selectedCells: new Set<string>(),
+    }));
+  },
+
+  setShowArchivedPeople: (show) => set({ showArchivedPeople: show }),
+  setPodFilterIds: (ids) => set({ podFilterIds: ids }),
+  setActiveWeekStartDate: (date) => set({ activeWeekStartDate: date }),
 
   exportData: async () => {
     const pods = await db.pods.toArray();
@@ -300,7 +642,6 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   importData: async (data) => {
-    // Clear everything
     await db.pods.clear();
     await db.people.clear();
     await db.scenarios.clear();

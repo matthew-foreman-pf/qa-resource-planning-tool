@@ -19,6 +19,20 @@ export class AppDatabase extends Dexie {
       timeOffs: 'id, scenarioId, personId, date, [scenarioId+personId]',
       scenarios: 'id, isBase',
     });
+    this.version(2).stores({
+      pods: 'id',
+      people: 'id, role, type, homePodId, status',
+      workItems: 'id, scenarioId, podId, [scenarioId+podId]',
+      allocations: 'id, scenarioId, personId, workItemId, date, [scenarioId+personId], [scenarioId+workItemId], [scenarioId+date]',
+      timeOffs: 'id, scenarioId, personId, date, [scenarioId+personId]',
+      scenarios: 'id, isBase',
+    }).upgrade((tx) => {
+      return tx.table('people').toCollection().modify((person: any) => {
+        if (!person.status) {
+          person.status = 'active';
+        }
+      });
+    });
   }
 }
 

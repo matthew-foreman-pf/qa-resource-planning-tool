@@ -6,6 +6,9 @@ import { RosterScreen } from './components/Roster/RosterScreen';
 import { DashboardScreen } from './components/Dashboard/DashboardScreen';
 import { EditPlanScreen } from './components/EditPlan/EditPlanScreen';
 import { WorkItemsScreen } from './components/WorkItems/WorkItemsScreen';
+import { PeopleScreen } from './components/People/PeopleScreen';
+import { AddPersonDrawer } from './components/Roster/AddPersonDrawer';
+import { PersonDrawer } from './components/Roster/PersonDrawer';
 
 export default function App() {
   const initialize = useStore((s) => s.initialize);
@@ -35,7 +38,10 @@ export default function App() {
         {currentScreen === 'dashboard' && <DashboardScreen />}
         {currentScreen === 'editPlan' && <EditPlanScreen />}
         {currentScreen === 'workItems' && <WorkItemsScreen />}
+        {currentScreen === 'people' && <PeopleScreen />}
       </main>
+      <PersonDrawer />
+      <AddPersonDrawer />
     </div>
   );
 }

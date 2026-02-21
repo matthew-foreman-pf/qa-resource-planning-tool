@@ -94,7 +94,7 @@ export function formatDateFull(d: Date): string {
 }
 
 export function formatDayHeader(d: Date): string {
-  return format(d, 'EEE d');
+  return format(d, 'EEE MMM d');
 }
 
 export function getWeekdaysInRangeStr(

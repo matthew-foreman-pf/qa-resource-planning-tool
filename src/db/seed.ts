@@ -38,7 +38,8 @@ export const seedPeople: Person[] = [
     role: 'qa_lead',
     type: 'internal',
     weeklyCapacityDays: 5,
-    weeklyBufferPct: 0.1,
+
+    status: 'active',
   },
   {
     id: 'person-izzy',
@@ -47,7 +48,9 @@ export const seedPeople: Person[] = [
     homePodId: 'pod-ps',
     type: 'internal',
     weeklyCapacityDays: 5,
-    weeklyBufferPct: 0.1,
+
+    status: 'active',
+    defaultPodFilterIds: ['pod-ps'],
   },
   {
     id: 'person-lionel',
@@ -56,7 +59,9 @@ export const seedPeople: Person[] = [
     homePodId: 'pod-la',
     type: 'internal',
     weeklyCapacityDays: 5,
-    weeklyBufferPct: 0.1,
+
+    status: 'active',
+    defaultPodFilterIds: ['pod-la'],
   },
   {
     id: 'person-kawika',
@@ -65,7 +70,9 @@ export const seedPeople: Person[] = [
     homePodId: 'pod-tp',
     type: 'internal',
     weeklyCapacityDays: 5,
-    weeklyBufferPct: 0.1,
+
+    status: 'active',
+    defaultPodFilterIds: ['pod-tp', 'pod-ss'],
   },
   {
     id: 'person-tbh',
@@ -74,7 +81,9 @@ export const seedPeople: Person[] = [
     homePodId: 'pod-ww',
     type: 'internal',
     weeklyCapacityDays: 5,
-    weeklyBufferPct: 0.1,
+
+    status: 'active',
+    defaultPodFilterIds: ['pod-ww'],
   },
 ];
 
@@ -87,7 +96,8 @@ for (let i = 1; i <= 25; i++) {
     role: 'tester',
     type: 'vendor',
     weeklyCapacityDays: 5,
-    weeklyBufferPct: 0.1,
+
+    status: 'active',
   });
 }
 

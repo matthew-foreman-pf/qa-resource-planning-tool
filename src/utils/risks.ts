@@ -166,8 +166,7 @@ export function computeCapacityRisks(
   const risks: CapacityRisk[] = [];
 
   for (const person of people) {
-    const cap =
-      person.weeklyCapacityDays * (1 - person.weeklyBufferPct);
+    const cap = person.weeklyCapacityDays;
 
     for (const week of weeks) {
       const weekDays = week.weekdays.map(toDateStr);
@@ -178,9 +177,9 @@ export function computeCapacityRisks(
         .reduce((sum, a) => sum + a.days, 0);
 
       let level: RiskLevel = 'green';
-      if (assignedDays >= 5.5) {
+      if (assignedDays >= 6) {
         level = 'red';
-      } else if (assignedDays > 4.5) {
+      } else if (assignedDays > 5) {
         level = 'yellow';
       }
 

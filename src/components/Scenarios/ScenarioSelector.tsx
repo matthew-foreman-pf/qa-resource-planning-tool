@@ -8,6 +8,15 @@ export function ScenarioSelector() {
   const duplicateScenario = useStore((s) => s.duplicateScenario);
   const exportData = useStore((s) => s.exportData);
   const importData = useStore((s) => s.importData);
+  const showArchivedPeople = useStore((s) => s.showArchivedPeople);
+  const setShowArchivedPeople = useStore((s) => s.setShowArchivedPeople);
+  const pods = useStore((s) => s.pods);
+  const podFilterIds = useStore((s) => s.podFilterIds);
+  const setPodFilterIds = useStore((s) => s.setPodFilterIds);
+  const editMode = useStore((s) => s.editMode);
+  const setEditMode = useStore((s) => s.setEditMode);
+  const currentScreen = useStore((s) => s.currentScreen);
+
   const [showDuplicate, setShowDuplicate] = useState(false);
   const [newName, setNewName] = useState('');
 
@@ -46,29 +55,95 @@ export function ScenarioSelector() {
     input.click();
   };
 
+  const handlePodFilterChange = (podId: string) => {
+    if (podFilterIds.includes(podId)) {
+      setPodFilterIds(podFilterIds.filter((id) => id !== podId));
+    } else {
+      setPodFilterIds([...podFilterIds, podId]);
+    }
+  };
+
+  const clearPodFilter = () => {
+    setPodFilterIds([]);
+  };
+
   return (
     <div className="scenario-selector">
-      <label>Scenario:</label>
-      <select
-        value={currentScenarioId}
-        onChange={(e) => setScenario(e.target.value)}
-      >
-        {scenarios.map((s) => (
-          <option key={s.id} value={s.id}>
-            {s.name}
-            {s.isBase ? ' (Base)' : ''}
-          </option>
-        ))}
-      </select>
-      <button className="btn btn--sm" onClick={() => setShowDuplicate(!showDuplicate)}>
-        Duplicate
-      </button>
-      <button className="btn btn--sm" onClick={handleExport}>
-        Export JSON
-      </button>
-      <button className="btn btn--sm" onClick={handleImport}>
-        Import JSON
-      </button>
+      <div className="toolbar-row">
+        <div className="toolbar-group">
+          <label>Scenario:</label>
+          <select
+            value={currentScenarioId}
+            onChange={(e) => setScenario(e.target.value)}
+          >
+            {scenarios.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+                {s.isBase ? ' (Base)' : ''}
+              </option>
+            ))}
+          </select>
+          <button className="btn btn--sm" onClick={() => setShowDuplicate(!showDuplicate)}>
+            Duplicate
+          </button>
+          <button className="btn btn--sm" onClick={handleExport}>
+            Export
+          </button>
+          <button className="btn btn--sm" onClick={handleImport}>
+            Import
+          </button>
+        </div>
+
+        <div className="toolbar-divider" />
+
+        <div className="toolbar-group">
+          <label className="toolbar-checkbox">
+            <input
+              type="checkbox"
+              checked={showArchivedPeople}
+              onChange={(e) => setShowArchivedPeople(e.target.checked)}
+            />
+            Show Archived
+          </label>
+        </div>
+
+        {currentScreen === 'roster' && (
+          <>
+            <div className="toolbar-divider" />
+            <div className="toolbar-group">
+              <button
+                className={`btn btn--sm ${editMode ? 'btn--edit-active' : ''}`}
+                onClick={() => setEditMode(!editMode)}
+              >
+                {editMode ? '✓ Edit Mode' : 'Edit Mode'}
+              </button>
+            </div>
+          </>
+        )}
+
+        <div className="toolbar-divider" />
+
+        <div className="toolbar-group">
+          <label>Pods:</label>
+          <div className="pod-filter-chips">
+            {podFilterIds.length === 0 ? (
+              <span className="pod-chip pod-chip--active">All</span>
+            ) : (
+              <span className="pod-chip" onClick={clearPodFilter}>All</span>
+            )}
+            {pods.map((pod) => (
+              <span
+                key={pod.id}
+                className={`pod-chip ${podFilterIds.includes(pod.id) ? 'pod-chip--active' : ''}`}
+                onClick={() => handlePodFilterChange(pod.id)}
+              >
+                {pod.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {showDuplicate && (
         <div className="scenario-duplicate-form">
           <input

@@ -5,6 +5,7 @@ export interface Pod {
 
 export type PersonRole = 'qa_lead' | 'pod_lead' | 'tester';
 export type PersonType = 'internal' | 'vendor';
+export type PersonStatus = 'active' | 'archived';
 
 export interface Person {
   id: string;
@@ -13,7 +14,9 @@ export interface Person {
   homePodId?: string;
   type: PersonType;
   weeklyCapacityDays: number;
-  weeklyBufferPct: number;
+  status: PersonStatus;
+  archivedAt?: string; // ISO date YYYY-MM-DD
+  defaultPodFilterIds?: string[];
 }
 
 export type WorkItemType = 'feature' | 'initiative';
@@ -94,4 +97,16 @@ export interface CapacityRisk {
   assignedDays: number;
   cap: number;
   level: RiskLevel;
+}
+
+// Pod grouping for roster
+export interface PodSubgroup {
+  pod: Pod;
+  people: Person[];
+}
+
+export interface PodGroup {
+  lead: Person | null; // null for Emily (QA lead, no pod group)
+  label: string;
+  pods: PodSubgroup[];
 }

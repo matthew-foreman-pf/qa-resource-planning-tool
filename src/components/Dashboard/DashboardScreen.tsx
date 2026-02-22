@@ -19,10 +19,25 @@ export function DashboardScreen() {
   const scenarios = useStore((s) => s.scenarios);
   const currentScenarioId = useStore((s) => s.currentScenarioId);
   const showArchivedPeople = useStore((s) => s.showArchivedPeople);
+  const podFilterIds = useStore((s) => s.podFilterIds);
+  const activeWeekStartDate = useStore((s) => s.activeWeekStartDate);
 
   const weeks = useMemo(() => getPlanningWeeks(12), []);
 
   const currentScenario = scenarios.find((s) => s.id === currentScenarioId);
+
+  // Active week dates — same selector as RosterGrid
+  const activeWeekDates = useMemo(() => {
+    const week = weeks.find((w) => w.weekStartStr === activeWeekStartDate);
+    if (!week) return new Set<string>();
+    return new Set(week.weekdays.map(toDateStr));
+  }, [weeks, activeWeekStartDate]);
+
+  // Active week label for display
+  const activeWeekLabel = useMemo(() => {
+    const week = weeks.find((w) => w.weekStartStr === activeWeekStartDate);
+    return week?.weekLabel || weeks[0]?.weekLabel || '';
+  }, [weeks, activeWeekStartDate]);
 
   return (
     <div className="dashboard-screen">
@@ -46,8 +61,10 @@ export function DashboardScreen() {
         pods={pods}
         allocations={allocations}
         workItems={workItems}
-        weeks={weeks}
+        activeWeekDates={activeWeekDates}
+        activeWeekLabel={activeWeekLabel}
         showArchived={showArchivedPeople}
+        podFilterIds={podFilterIds}
       />
     </div>
   );
@@ -279,15 +296,19 @@ function DashboardPeople({
   pods,
   allocations,
   workItems,
-  weeks,
+  activeWeekDates,
+  activeWeekLabel,
   showArchived,
+  podFilterIds,
 }: {
   people: Person[];
   pods: { id: string; name: string }[];
   allocations: Allocation[];
   workItems: WorkItem[];
-  weeks: WeekInfo[];
+  activeWeekDates: Set<string>;
+  activeWeekLabel: string;
   showArchived: boolean;
+  podFilterIds: string[];
 }) {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
@@ -303,24 +324,28 @@ function DashboardPeople({
     });
   }, []);
 
-  // Filter people
+  // Filter people — same logic as RosterGrid
   const visiblePeople = useMemo(
     () => showArchived ? people : people.filter((p) => p.status !== 'archived'),
     [people, showArchived]
   );
 
-  // Build pod groups
+  // Build pod groups — same as RosterGrid
   const podGroups = useMemo(
     () => buildPodGroups(visiblePeople, pods, allocations, workItems),
     [visiblePeople, pods, allocations, workItems]
   );
 
-  // Current week dates for person breakdown
-  const currentWeekDates = useMemo(() => {
-    const week = weeks[0];
-    if (!week) return new Set<string>();
-    return new Set(week.weekdays.map(toDateStr));
-  }, [weeks]);
+  // Apply pod filter — same logic as RosterGrid
+  const filteredGroups = useMemo(() => {
+    if (podFilterIds.length === 0) return podGroups;
+    return podGroups.filter((g) => {
+      // Always show QA lead group
+      if (g.pods.some((sg) => sg.pod.id === '__qa_lead__')) return true;
+      // Show group if any of its pods match the filter
+      return g.pods.some((sg) => podFilterIds.includes(sg.pod.id));
+    });
+  }, [podGroups, podFilterIds]);
 
   // WorkItemId -> PodId map
   const wiPodMap = useMemo(() => {
@@ -336,17 +361,14 @@ function DashboardPeople({
     return map;
   }, [workItems]);
 
-  // Current week label
-  const currentWeekLabel = weeks[0]?.weekLabel || '';
-
   return (
     <section className="dashboard-section">
       <h3 className="dashboard-section-title">
         Team Assignments
-        <span className="dashboard-section-subtitle">{currentWeekLabel}</span>
+        <span className="dashboard-section-subtitle">{activeWeekLabel}</span>
       </h3>
 
-      {podGroups.map((group) => {
+      {filteredGroups.map((group) => {
         const collapsed = collapsedGroups.has(group.label);
         return (
           <div key={group.label} className="dashboard-group">
@@ -374,7 +396,7 @@ function DashboardPeople({
                       <DashboardPersonCard
                         key={person.id}
                         person={person}
-                        currentWeekDates={currentWeekDates}
+                        activeWeekDates={activeWeekDates}
                         allocations={allocations}
                         wiPodMap={wiPodMap}
                         wiMap={wiMap}
@@ -396,14 +418,14 @@ function DashboardPeople({
 
 function DashboardPersonCard({
   person,
-  currentWeekDates,
+  activeWeekDates,
   allocations,
   wiPodMap,
   wiMap,
   pods,
 }: {
   person: Person;
-  currentWeekDates: Set<string>;
+  activeWeekDates: Set<string>;
   allocations: Allocation[];
   wiPodMap: Record<string, string>;
   wiMap: Record<string, WorkItem>;
@@ -411,10 +433,10 @@ function DashboardPersonCard({
 }) {
   const isArchived = person.status === 'archived';
 
-  // Pod breakdown for current week
+  // Pod breakdown for active week — same selector as RosterGrid
   const breakdown = useMemo(
-    () => getPersonWeekPodBreakdown(person.id, currentWeekDates, allocations, wiPodMap, pods),
-    [person.id, currentWeekDates, allocations, wiPodMap, pods]
+    () => getPersonWeekPodBreakdown(person.id, activeWeekDates, allocations, wiPodMap, pods),
+    [person.id, activeWeekDates, allocations, wiPodMap, pods]
   );
 
   // Build assignment summary text: group allocations by work item
@@ -422,7 +444,7 @@ function DashboardPersonCard({
     const wiDays: Record<string, number> = {};
     for (const a of allocations) {
       if (a.personId !== person.id) continue;
-      if (!currentWeekDates.has(a.date)) continue;
+      if (!activeWeekDates.has(a.date)) continue;
       wiDays[a.workItemId] = (wiDays[a.workItemId] || 0) + a.days;
     }
 
@@ -435,7 +457,7 @@ function DashboardPersonCard({
         const label = wi ? getWorkItemLabel(wi) : '?';
         return `${label} (${days}d)`;
       });
-  }, [person.id, currentWeekDates, allocations, wiMap]);
+  }, [person.id, activeWeekDates, allocations, wiMap]);
 
   const roleLabel = person.role === 'qa_lead'
     ? 'QA Lead'

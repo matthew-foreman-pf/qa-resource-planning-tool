@@ -1700,6 +1700,82 @@ input[type='date']::-webkit-calendar-picker-indicator {
 }
 
 /* ============================================
+   TIME OFF UI
+   ============================================ */
+
+.time-off-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn--timeoff {
+  background: var(--cell-timeoff);
+  border-color: var(--cell-timeoff);
+  color: var(--text-bright);
+}
+
+.btn--timeoff:hover {
+  background: #6d4d4d;
+  border-color: #6d4d4d;
+}
+
+.time-off-form {
+  background: rgba(92, 64, 64, 0.15);
+  border: 1px solid var(--cell-timeoff);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.time-off-reason-input {
+  width: 100%;
+  font-size: 13px;
+}
+
+.time-off-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.time-off-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--surface-alt);
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.time-off-list-date {
+  color: var(--text-bright);
+  font-weight: 500;
+  min-width: 120px;
+}
+
+.time-off-list-reason {
+  color: var(--text-muted);
+  flex: 1;
+  font-style: italic;
+}
+
+.time-off-list-item .btn--danger {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.time-off-list-empty {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 13px;
+}
+
+/* ============================================
    EDIT MODE & MULTI-SELECT
    ============================================ */
 

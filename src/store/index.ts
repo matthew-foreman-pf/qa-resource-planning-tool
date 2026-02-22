@@ -113,6 +113,8 @@ interface AppState {
   // Time off
   addTimeOff: (to: TimeOff) => Promise<void>;
   removeTimeOff: (id: string) => Promise<void>;
+  addTimeOffForRange: (personId: string, startDate: string, endDate: string, weekdaysOnly: boolean, reason?: string) => Promise<number>;
+  removeTimeOffsForRange: (personId: string, startDate: string, endDate: string) => Promise<number>;
 
   // Scenario management
   duplicateScenario: (sourceId: string, newName: string) => Promise<string>;
@@ -528,6 +530,75 @@ export const useStore = create<AppState>((set, get) => ({
   removeTimeOff: async (id) => {
     await db.timeOffs.delete(id);
     set((s) => ({ timeOffs: s.timeOffs.filter((t) => t.id !== id) }));
+  },
+
+  addTimeOffForRange: async (personId, startDate, endDate, weekdaysOnly, reason) => {
+    const scenarioId = get().currentScenarioId;
+    const dates = weekdaysOnly
+      ? getWeekdaysInRangeStr(startDate, endDate)
+      : (() => {
+          const result: string[] = [];
+          const s = new Date(startDate);
+          const e = new Date(endDate);
+          for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+            result.push(toDateStr(new Date(d)));
+          }
+          return result;
+        })();
+
+    // Skip dates that already have time off for this person
+    const existingDates = new Set(
+      get().timeOffs.filter((t) => t.personId === personId).map((t) => t.date)
+    );
+    const newDates = dates.filter((d) => !existingDates.has(d));
+    if (newDates.length === 0) return 0;
+
+    // Create time-off entries
+    const newTimeOffs: TimeOff[] = newDates.map((date) => ({
+      id: crypto.randomUUID(),
+      personId,
+      date,
+      reason: reason || undefined,
+    }));
+
+    // Remove conflicting allocations for these dates
+    const dateSet = new Set(newDates);
+    const conflictAllocs = get().allocations.filter(
+      (a) => a.personId === personId && dateSet.has(a.date)
+    );
+    if (conflictAllocs.length > 0) {
+      await db.allocations.bulkDelete(conflictAllocs.map((a) => a.id));
+    }
+
+    // Persist time-off entries
+    await db.timeOffs.bulkPut(
+      newTimeOffs.map((to) => ({ ...to, scenarioId }))
+    );
+
+    const deleteIds = new Set(conflictAllocs.map((a) => a.id));
+    set((s) => ({
+      timeOffs: [...s.timeOffs, ...newTimeOffs],
+      allocations: deleteIds.size > 0
+        ? s.allocations.filter((a) => !deleteIds.has(a.id))
+        : s.allocations,
+    }));
+
+    return newTimeOffs.length;
+  },
+
+  removeTimeOffsForRange: async (personId, startDate, endDate) => {
+    const toRemove = get().timeOffs.filter(
+      (t) => t.personId === personId && t.date >= startDate && t.date <= endDate
+    );
+    if (toRemove.length === 0) return 0;
+
+    await db.timeOffs.bulkDelete(toRemove.map((t) => t.id));
+    const deleteIds = new Set(toRemove.map((t) => t.id));
+    set((s) => ({
+      timeOffs: s.timeOffs.filter((t) => !deleteIds.has(t.id)),
+    }));
+
+    return toRemove.length;
   },
 
   duplicateScenario: async (sourceId, newName) => {

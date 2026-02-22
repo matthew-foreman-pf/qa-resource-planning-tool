@@ -22,6 +22,8 @@ export function DayAssignmentDrawer() {
   const removeAllocation = useStore((s) => s.removeAllocation);
   const setAllocationForDay = useStore((s) => s.setAllocationForDay);
   const setAllocationForRange = useStore((s) => s.setAllocationForRange);
+  const addTimeOff = useStore((s) => s.addTimeOff);
+  const removeTimeOff = useStore((s) => s.removeTimeOff);
 
   const weeks = useMemo(() => getPlanningWeeks(12), []);
 
@@ -90,8 +92,18 @@ export function DayAssignmentDrawer() {
           <div className="day-drawer-section">
             <h4>Current Assignments</h4>
             {isOff ? (
-              <div className="side-panel-badge badge--red">
-                Time Off{timeOffEntry?.reason ? `: ${timeOffEntry.reason}` : ''}
+              <div className="time-off-toggle-row">
+                <div className="side-panel-badge badge--red">
+                  Time Off{timeOffEntry?.reason ? `: ${timeOffEntry.reason}` : ''}
+                </div>
+                <button
+                  className="btn btn--sm"
+                  onClick={() => {
+                    if (timeOffEntry) removeTimeOff(timeOffEntry.id);
+                  }}
+                >
+                  Remove Time Off
+                </button>
               </div>
             ) : dayAllocs.length === 0 ? (
               <div className="side-panel-badge badge--neutral">Available</div>
@@ -117,6 +129,17 @@ export function DayAssignmentDrawer() {
               </ul>
             )}
           </div>
+
+          {/* Time off toggle */}
+          {!isOff && (
+            <TimeOffToggleSection
+              personId={personId}
+              date={date}
+              dayAllocs={dayAllocs}
+              addTimeOff={addTimeOff}
+              removeAllocation={removeAllocation}
+            />
+          )}
 
           {/* Warnings */}
           {(capacityRisk !== 'green' || contextRisk !== 'green') && (
@@ -227,6 +250,85 @@ function WarningIcon() {
       <path d="M7 5.5V8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       <circle cx="7" cy="10" r="0.5" fill="currentColor" />
     </svg>
+  );
+}
+
+/* ---- Time Off Toggle ---- */
+
+function TimeOffToggleSection({
+  personId,
+  date,
+  dayAllocs,
+  addTimeOff,
+  removeAllocation,
+}: {
+  personId: string;
+  date: string;
+  dayAllocs: { id: string }[];
+  addTimeOff: (to: { id: string; personId: string; date: string; reason?: string }) => Promise<void>;
+  removeAllocation: (id: string) => Promise<void>;
+}) {
+  const [showForm, setShowForm] = useState(false);
+  const [reason, setReason] = useState('');
+  const [msg, setMsg] = useState('');
+
+  const handleConfirm = async () => {
+    // Remove any existing allocations for this day
+    for (const a of dayAllocs) {
+      await removeAllocation(a.id);
+    }
+    // Add time off
+    await addTimeOff({
+      id: crypto.randomUUID(),
+      personId,
+      date,
+      reason: reason.trim() || undefined,
+    });
+    setShowForm(false);
+    setReason('');
+    setMsg('Marked as time off');
+    setTimeout(() => setMsg(''), 2000);
+  };
+
+  if (!showForm) {
+    return (
+      <div className="day-drawer-section">
+        <div className="time-off-toggle-row">
+          <button
+            className="btn btn--sm btn--timeoff"
+            onClick={() => setShowForm(true)}
+          >
+            Mark Time Off
+          </button>
+          {msg && <span className="drawer-saved-msg">{msg}</span>}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="day-drawer-section">
+      <div className="time-off-form">
+        <div className="form-group">
+          <label>Reason (optional)</label>
+          <input
+            type="text"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="e.g. PTO, Conference, Sick day"
+            className="time-off-reason-input"
+          />
+        </div>
+        <div className="form-actions">
+          <button className="btn btn--primary btn--sm" onClick={handleConfirm}>
+            Confirm
+          </button>
+          <button className="btn btn--sm" onClick={() => { setShowForm(false); setReason(''); }}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

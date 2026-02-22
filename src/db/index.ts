@@ -1,5 +1,9 @@
 import Dexie, { type Table } from 'dexie';
+import dexieCloud from 'dexie-cloud-addon';
 import type { Pod, Person, WorkItem, Allocation, TimeOff, Scenario } from '../types';
+
+const CLOUD_URL = import.meta.env.VITE_DEXIE_CLOUD_URL as string | undefined;
+export const isCloudEnabled = Boolean(CLOUD_URL);
 
 export class AppDatabase extends Dexie {
   pods!: Table<Pod>;
@@ -10,7 +14,8 @@ export class AppDatabase extends Dexie {
   scenarios!: Table<Scenario>;
 
   constructor() {
-    super('QAResourcePlanning');
+    super('QAResourcePlanning', isCloudEnabled ? { addons: [dexieCloud] } : {});
+
     this.version(1).stores({
       pods: 'id',
       people: 'id, role, type, homePodId',
@@ -33,6 +38,26 @@ export class AppDatabase extends Dexie {
         }
       });
     });
+
+    // Version 3: Add Dexie Cloud access control tables
+    this.version(3).stores({
+      pods: 'id',
+      people: 'id, role, type, homePodId, status',
+      workItems: 'id, scenarioId, podId, [scenarioId+podId]',
+      allocations: 'id, scenarioId, personId, workItemId, date, [scenarioId+personId], [scenarioId+workItemId], [scenarioId+date]',
+      timeOffs: 'id, scenarioId, personId, date, [scenarioId+personId]',
+      scenarios: 'id, isBase',
+      realms: '@realmId',
+      members: '@id',
+      roles: '[realmId+name]',
+    });
+
+    if (isCloudEnabled && CLOUD_URL) {
+      this.cloud.configure({
+        databaseUrl: CLOUD_URL,
+        requireAuth: true,
+      });
+    }
   }
 }
 

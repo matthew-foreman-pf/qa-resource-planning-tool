@@ -1,4 +1,4 @@
-import { useMemo, useState, memo, useCallback } from 'react';
+import { useMemo, useState, memo, useCallback, useEffect } from 'react';
 import { useStore } from '../../store';
 import { getPlanningWeeks, toDateStr, formatDayHeader } from '../../utils/dates';
 import {
@@ -27,20 +27,46 @@ export function RosterGrid() {
   const podFilterIds = useStore((s) => s.podFilterIds);
   const editMode = useStore((s) => s.editMode);
   const selectedCells = useStore((s) => s.selectedCells);
-  const toggleCellSelection = useStore((s) => s.toggleCellSelection);
+  const startDragSelection = useStore((s) => s.startDragSelection);
+  const extendDragSelection = useStore((s) => s.extendDragSelection);
+  const endDragSelection = useStore((s) => s.endDragSelection);
   const activeWeekStartDate = useStore((s) => s.activeWeekStartDate);
   const setActiveWeekStartDate = useStore((s) => s.setActiveWeekStartDate);
 
-  // In edit mode, clicking a cell toggles selection; otherwise opens day drawer
-  const handleCellClick = useCallback(
+  // Window-level pointerup to end drag even if cursor leaves grid
+  useEffect(() => {
+    if (!editMode) return;
+    const handleUp = () => endDragSelection();
+    window.addEventListener('pointerup', handleUp);
+    return () => window.removeEventListener('pointerup', handleUp);
+  }, [editMode, endDragSelection]);
+
+  // In edit mode: pointerDown starts drag; in normal mode: click opens drawer
+  const handleCellPointerDown = useCallback(
     (personId: string, date: string) => {
       if (editMode) {
-        toggleCellSelection(personId, date);
-      } else {
+        startDragSelection(personId, date);
+      }
+    },
+    [editMode, startDragSelection]
+  );
+
+  const handleCellPointerEnter = useCallback(
+    (personId: string, date: string) => {
+      if (editMode) {
+        extendDragSelection(personId, date);
+      }
+    },
+    [editMode, extendDragSelection]
+  );
+
+  const handleCellClick = useCallback(
+    (personId: string, date: string) => {
+      if (!editMode) {
         selectCell(personId, date);
       }
     },
-    [editMode, toggleCellSelection, selectCell]
+    [editMode, selectCell]
   );
 
   const weeks = useMemo(() => getPlanningWeeks(12), []);
@@ -130,7 +156,7 @@ export function RosterGrid() {
   }, []);
 
   return (
-    <div className="roster-container">
+    <div className={`roster-container ${editMode ? 'roster-container--edit-mode' : ''}`}>
       <div
         className="roster-grid"
         style={{ gridTemplateColumns: `200px repeat(${totalDays}, 1fr)` }}
@@ -176,6 +202,8 @@ export function RosterGrid() {
             activeWeekDates={activeWeekDates}
             timeOffSet={timeOffSet}
             onCellClick={handleCellClick}
+            onCellPointerDown={handleCellPointerDown}
+            onCellPointerEnter={handleCellPointerEnter}
             onNameClick={openPersonDrawer}
             collapsed={collapsedGroups.has(group.label)}
             onToggleCollapse={toggleGroup}
@@ -204,6 +232,8 @@ function PodGroupSection({
   activeWeekDates,
   timeOffSet,
   onCellClick,
+  onCellPointerDown,
+  onCellPointerEnter,
   onNameClick,
   collapsed,
   onToggleCollapse,
@@ -223,6 +253,8 @@ function PodGroupSection({
   activeWeekDates: Set<string>;
   timeOffSet: Set<string>;
   onCellClick: (personId: string, date: string) => void;
+  onCellPointerDown: (personId: string, date: string) => void;
+  onCellPointerEnter: (personId: string, date: string) => void;
   onNameClick: (personId: string) => void;
   collapsed: boolean;
   onToggleCollapse: (label: string) => void;
@@ -282,6 +314,8 @@ function PodGroupSection({
             activeWeekDates={activeWeekDates}
             timeOffSet={timeOffSet}
             onCellClick={onCellClick}
+            onCellPointerDown={onCellPointerDown}
+            onCellPointerEnter={onCellPointerEnter}
             onNameClick={onNameClick}
             editMode={editMode}
             selectedCells={selectedCells}
@@ -306,6 +340,8 @@ function PodSubgroupSection({
   activeWeekDates,
   timeOffSet,
   onCellClick,
+  onCellPointerDown,
+  onCellPointerEnter,
   onNameClick,
   editMode,
   selectedCells,
@@ -322,6 +358,8 @@ function PodSubgroupSection({
   activeWeekDates: Set<string>;
   timeOffSet: Set<string>;
   onCellClick: (personId: string, date: string) => void;
+  onCellPointerDown: (personId: string, date: string) => void;
+  onCellPointerEnter: (personId: string, date: string) => void;
   onNameClick: (personId: string) => void;
   editMode: boolean;
   selectedCells: Set<string>;
@@ -349,6 +387,8 @@ function PodSubgroupSection({
           activeWeekDates={activeWeekDates}
           timeOffSet={timeOffSet}
           onCellClick={onCellClick}
+          onCellPointerDown={onCellPointerDown}
+          onCellPointerEnter={onCellPointerEnter}
           onNameClick={onNameClick}
           editMode={editMode}
           selectedCells={selectedCells}
@@ -387,6 +427,8 @@ const PersonRow = memo(function PersonRow({
   activeWeekDates,
   timeOffSet,
   onCellClick,
+  onCellPointerDown,
+  onCellPointerEnter,
   onNameClick,
   editMode,
   selectedCells,
@@ -401,6 +443,8 @@ const PersonRow = memo(function PersonRow({
   activeWeekDates: Set<string>;
   timeOffSet: Set<string>;
   onCellClick: (personId: string, date: string) => void;
+  onCellPointerDown: (personId: string, date: string) => void;
+  onCellPointerEnter: (personId: string, date: string) => void;
   onNameClick: (personId: string) => void;
   editMode: boolean;
   selectedCells: Set<string>;
@@ -550,6 +594,17 @@ const PersonRow = memo(function PersonRow({
               className={cellClass}
               style={cellStyle}
               onClick={() => !isPastArchive && onCellClick(person.id, dateStr)}
+              onPointerDown={(e) => {
+                if (!isPastArchive && editMode) {
+                  e.preventDefault(); // prevent text selection while dragging
+                  onCellPointerDown(person.id, dateStr);
+                }
+              }}
+              onPointerEnter={() => {
+                if (!isPastArchive && editMode) {
+                  onCellPointerEnter(person.id, dateStr);
+                }
+              }}
               title={cellTitle}
             >
               {isSelected && (

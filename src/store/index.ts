@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { db } from '../db';
+import { db, isCloudEnabled } from '../db';
 import type {
   Pod,
   Person,
@@ -16,8 +16,15 @@ import {
   generateSeedAllocations,
   generateSeedTimeOffs,
   basePlanScenario,
+  TEAM_REALM_ID,
 } from '../db/seed';
 import { toDateStr, today, getWeekdaysInRangeStr, getWeekStart } from '../utils/dates';
+
+/** Returns realm/owner props to spread onto objects when in cloud mode */
+function cloudProps(): Record<string, string> {
+  if (!isCloudEnabled) return {};
+  return { realmId: TEAM_REALM_ID, owner: db.cloud.currentUserId };
+}
 
 interface AppState {
   // Data
@@ -45,9 +52,11 @@ interface AppState {
   // Add person drawer
   addPersonDrawerOpen: boolean;
 
-  // Edit mode (multi-select)
+  // Edit mode (multi-select + drag)
   editMode: boolean;
   selectedCells: Set<string>; // "personId|date" keys
+  selectionPersonId: string | null; // locks drag to one person row
+  isSelecting: boolean; // pointer is down and dragging
 
   // Active week for pod breakdown chips
   activeWeekStartDate: string; // YYYY-MM-DD (Monday)
@@ -119,11 +128,14 @@ interface AppState {
   // Scenario management
   duplicateScenario: (sourceId: string, newName: string) => Promise<string>;
 
-  // Edit mode (multi-select)
+  // Edit mode (multi-select + drag)
   setEditMode: (on: boolean) => void;
   toggleCellSelection: (personId: string, date: string) => void;
+  startDragSelection: (personId: string, date: string) => void;
+  extendDragSelection: (personId: string, date: string) => void;
+  endDragSelection: () => void;
   clearSelection: () => void;
-  batchAssign: (workItemId: string) => Promise<void>;
+  batchAssign: (workItemId: string, mode?: 'replace' | 'skip') => Promise<void>;
   batchClear: () => Promise<void>;
 
   // UI toggles
@@ -137,6 +149,9 @@ interface AppState {
 
   // Reset
   resetData: () => Promise<void>;
+
+  // Cloud
+  inviteTeamMember: (email: string) => Promise<void>;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -158,39 +173,88 @@ export const useStore = create<AppState>((set, get) => ({
   addPersonDrawerOpen: false,
   editMode: false,
   selectedCells: new Set<string>(),
+  selectionPersonId: null,
+  isSelecting: false,
   activeWeekStartDate: toDateStr(getWeekStart(today())),
 
   initialize: async () => {
-    // Check if DB has data
-    const scenarioCount = await db.scenarios.count();
-    if (scenarioCount === 0) {
-      // Seed the database
-      await db.pods.bulkPut(seedPods);
-      await db.people.bulkPut(seedPeople);
-      await db.scenarios.put(basePlanScenario);
+    if (isCloudEnabled) {
+      // Cloud mode: check if team realm exists (synced from cloud)
+      const existingRealm = await db.table('realms').get(TEAM_REALM_ID);
+      const scenarioCount = await db.scenarios.count();
 
-      const workItems = generateSeedWorkItems();
-      await db.workItems.bulkPut(
-        workItems.map((wi) => ({ ...wi, scenarioId: 'scenario-base' }))
-      );
+      if (!existingRealm && scenarioCount === 0) {
+        // First user: create team realm + seed data
+        const cp = cloudProps();
 
-      const allocations = generateSeedAllocations(workItems);
-      await db.allocations.bulkPut(
-        allocations.map((a) => ({ ...a, scenarioId: 'scenario-base' }))
-      );
+        await db.table('realms').put({
+          realmId: TEAM_REALM_ID,
+          name: 'QA Team Planning',
+          owner: db.cloud.currentUserId,
+        });
 
-      const timeOffs = generateSeedTimeOffs();
-      await db.timeOffs.bulkPut(
-        timeOffs.map((to) => ({ ...to, scenarioId: 'scenario-base' }))
-      );
+        await db.table('members').add({
+          realmId: TEAM_REALM_ID,
+          userId: db.cloud.currentUserId,
+          name: 'Admin',
+          roles: ['admin'],
+          accepted: new Date(),
+        });
+
+        await db.pods.bulkPut(seedPods.map((p) => ({ ...p, ...cp })));
+        await db.people.bulkPut(seedPeople.map((p) => ({ ...p, ...cp })));
+        await db.scenarios.put({ ...basePlanScenario, ...cp });
+
+        const workItems = generateSeedWorkItems();
+        await db.workItems.bulkPut(
+          workItems.map((wi) => ({ ...wi, scenarioId: 'scenario-base', ...cp }))
+        );
+
+        const allocations = generateSeedAllocations(workItems);
+        await db.allocations.bulkPut(
+          allocations.map((a) => ({ ...a, scenarioId: 'scenario-base', ...cp }))
+        );
+
+        const timeOffs = generateSeedTimeOffs();
+        await db.timeOffs.bulkPut(
+          timeOffs.map((to) => ({ ...to, scenarioId: 'scenario-base', ...cp }))
+        );
+      }
+      // If realm exists or data already present, data syncs from cloud
+    } else {
+      // Local-only mode: seed exactly as before
+      const scenarioCount = await db.scenarios.count();
+      if (scenarioCount === 0) {
+        await db.pods.bulkPut(seedPods);
+        await db.people.bulkPut(seedPeople);
+        await db.scenarios.put(basePlanScenario);
+
+        const workItems = generateSeedWorkItems();
+        await db.workItems.bulkPut(
+          workItems.map((wi) => ({ ...wi, scenarioId: 'scenario-base' }))
+        );
+
+        const allocations = generateSeedAllocations(workItems);
+        await db.allocations.bulkPut(
+          allocations.map((a) => ({ ...a, scenarioId: 'scenario-base' }))
+        );
+
+        const timeOffs = generateSeedTimeOffs();
+        await db.timeOffs.bulkPut(
+          timeOffs.map((to) => ({ ...to, scenarioId: 'scenario-base' }))
+        );
+      }
     }
 
     const pods = await db.pods.toArray();
     const people = await db.people.toArray();
     const scenarios = await db.scenarios.toArray();
 
-    // Hardcoded currentUserId for testing (Emily = QA Lead sees all)
-    const currentUserId = 'person-emily';
+    // Determine current user
+    const currentUserId = isCloudEnabled
+      ? db.cloud.currentUserId
+      : 'person-emily';
+
     const currentUser = people.find((p) => p.id === currentUserId);
 
     // Default pod filter based on current user role
@@ -227,7 +291,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   addPerson: async (person) => {
-    await db.people.put(person);
+    await db.people.put({ ...person, ...cloudProps() });
     set((s) => ({ people: [...s.people, person] }));
   },
 
@@ -240,7 +304,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   updatePerson: async (person) => {
-    await db.people.put(person);
+    await db.people.put({ ...person, ...cloudProps() });
     set((s) => ({
       people: s.people.map((p) => (p.id === person.id ? person : p)),
     }));
@@ -250,7 +314,7 @@ export const useStore = create<AppState>((set, get) => ({
     const person = get().people.find((p) => p.id === personId);
     if (!person) return;
     const updated = { ...person, status: 'archived' as const, archivedAt: toDateStr(today()) };
-    await db.people.put(updated);
+    await db.people.put({ ...updated, ...cloudProps() });
     set((s) => ({
       people: s.people.map((p) => (p.id === personId ? updated : p)),
     }));
@@ -260,7 +324,7 @@ export const useStore = create<AppState>((set, get) => ({
     const person = get().people.find((p) => p.id === personId);
     if (!person) return;
     const updated = { ...person, status: 'active' as const, archivedAt: undefined };
-    await db.people.put(updated);
+    await db.people.put({ ...updated, ...cloudProps() });
     set((s) => ({
       people: s.people.map((p) => (p.id === personId ? updated : p)),
     }));
@@ -284,13 +348,13 @@ export const useStore = create<AppState>((set, get) => ({
 
   addWorkItem: async (wi) => {
     const scenarioId = get().currentScenarioId;
-    await db.workItems.put({ ...wi, scenarioId });
+    await db.workItems.put({ ...wi, scenarioId, ...cloudProps() });
     set((s) => ({ workItems: [...s.workItems, wi] }));
   },
 
   updateWorkItem: async (wi) => {
     const scenarioId = get().currentScenarioId;
-    await db.workItems.put({ ...wi, scenarioId });
+    await db.workItems.put({ ...wi, scenarioId, ...cloudProps() });
     set((s) => ({
       workItems: s.workItems.map((w) => (w.id === wi.id ? wi : w)),
     }));
@@ -312,8 +376,9 @@ export const useStore = create<AppState>((set, get) => ({
 
   addAllocations: async (allocs) => {
     const scenarioId = get().currentScenarioId;
+    const cp = cloudProps();
     await db.allocations.bulkPut(
-      allocs.map((a) => ({ ...a, scenarioId }))
+      allocs.map((a) => ({ ...a, scenarioId, ...cp }))
     );
     set((s) => ({ allocations: [...s.allocations, ...allocs] }));
   },
@@ -334,7 +399,7 @@ export const useStore = create<AppState>((set, get) => ({
       date,
       days: 1,
     };
-    await db.allocations.put({ ...newAlloc, scenarioId });
+    await db.allocations.put({ ...newAlloc, scenarioId, ...cloudProps() });
     set((s) => ({ allocations: [...s.allocations, newAlloc] }));
   },
 
@@ -361,8 +426,9 @@ export const useStore = create<AppState>((set, get) => ({
     }));
 
     if (allocs.length > 0) {
+      const cp = cloudProps();
       await db.allocations.bulkPut(
-        allocs.map((a) => ({ ...a, scenarioId }))
+        allocs.map((a) => ({ ...a, scenarioId, ...cp }))
       );
       set((s) => ({ allocations: [...s.allocations, ...allocs] }));
     }
@@ -429,8 +495,9 @@ export const useStore = create<AppState>((set, get) => ({
       }));
 
     if (newAllocs.length > 0) {
+      const cp = cloudProps();
       await db.allocations.bulkPut(
-        newAllocs.map((a) => ({ ...a, scenarioId }))
+        newAllocs.map((a) => ({ ...a, scenarioId, ...cp }))
       );
     }
 
@@ -464,13 +531,14 @@ export const useStore = create<AppState>((set, get) => ({
     // 2. Update candidate allocations' workItemId in Dexie
     const updateSet = new Set(updateIds);
     if (updateIds.length > 0) {
+      const cp = cloudProps();
       const dbAllocs = await db.allocations
         .where('scenarioId')
         .equals(scenarioId)
         .toArray();
       const toUpdate = dbAllocs.filter((a) => updateSet.has(a.id));
       await db.allocations.bulkPut(
-        toUpdate.map((a) => ({ ...a, workItemId: newWorkItemId }))
+        toUpdate.map((a) => ({ ...a, workItemId: newWorkItemId, ...cp }))
       );
     }
 
@@ -502,8 +570,9 @@ export const useStore = create<AppState>((set, get) => ({
     });
 
     // Batch persist to Dexie
+    const cp = cloudProps();
     const toWrite = updatedPeople.filter((p) => idSet.has(p.id));
-    await db.people.bulkPut(toWrite);
+    await db.people.bulkPut(toWrite.map((p) => ({ ...p, ...cp })));
 
     set({ people: updatedPeople });
   },
@@ -518,15 +587,16 @@ export const useStore = create<AppState>((set, get) => ({
       return { ...p, leadId };
     });
 
+    const cp = cloudProps();
     const toWrite = updatedPeople.filter((p) => idSet.has(p.id));
-    await db.people.bulkPut(toWrite);
+    await db.people.bulkPut(toWrite.map((p) => ({ ...p, ...cp })));
 
     set({ people: updatedPeople });
   },
 
   addTimeOff: async (to) => {
     const scenarioId = get().currentScenarioId;
-    await db.timeOffs.put({ ...to, scenarioId });
+    await db.timeOffs.put({ ...to, scenarioId, ...cloudProps() });
     set((s) => ({ timeOffs: [...s.timeOffs, to] }));
   },
 
@@ -574,8 +644,9 @@ export const useStore = create<AppState>((set, get) => ({
     }
 
     // Persist time-off entries
+    const cp = cloudProps();
     await db.timeOffs.bulkPut(
-      newTimeOffs.map((to) => ({ ...to, scenarioId }))
+      newTimeOffs.map((to) => ({ ...to, scenarioId, ...cp }))
     );
 
     const deleteIds = new Set(conflictAllocs.map((a) => a.id));
@@ -607,8 +678,9 @@ export const useStore = create<AppState>((set, get) => ({
   duplicateScenario: async (sourceId, newName) => {
     const newId = crypto.randomUUID();
     const newScenario: Scenario = { id: newId, name: newName, isBase: false };
+    const cp = cloudProps();
 
-    await db.scenarios.put(newScenario);
+    await db.scenarios.put({ ...newScenario, ...cp });
 
     const srcWorkItems = await db.workItems
       .where('scenarioId')
@@ -618,6 +690,7 @@ export const useStore = create<AppState>((set, get) => ({
       ...wi,
       id: crypto.randomUUID(),
       scenarioId: newId,
+      ...cp,
     }));
 
     const wiIdMap: Record<string, string> = {};
@@ -637,6 +710,7 @@ export const useStore = create<AppState>((set, get) => ({
         id: crypto.randomUUID(),
         scenarioId: newId,
         workItemId: wiIdMap[a.workItemId] || a.workItemId,
+        ...cp,
       }))
     );
 
@@ -649,6 +723,7 @@ export const useStore = create<AppState>((set, get) => ({
         ...to,
         id: crypto.randomUUID(),
         scenarioId: newId,
+        ...cp,
       }))
     );
 
@@ -657,7 +732,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   setEditMode: (on) => {
-    set({ editMode: on, selectedCells: new Set<string>() });
+    set({ editMode: on, selectedCells: new Set<string>(), selectionPersonId: null, isSelecting: false });
     // Close any open drawers when entering edit mode
     if (on) {
       set({ dayDrawerOpen: false, selectedCellInfo: null, personDrawerOpen: false, selectedPersonId: null });
@@ -677,38 +752,111 @@ export const useStore = create<AppState>((set, get) => ({
     });
   },
 
-  clearSelection: () => {
-    set({ selectedCells: new Set<string>() });
+  startDragSelection: (personId, date) => {
+    const key = `${personId}|${date}`;
+    const next = new Set<string>();
+    next.add(key);
+    set({ selectedCells: next, selectionPersonId: personId, isSelecting: true });
   },
 
-  batchAssign: async (workItemId) => {
-    const { selectedCells, currentScenarioId } = get();
+  extendDragSelection: (personId, date) => {
+    const { isSelecting, selectionPersonId } = get();
+    if (!isSelecting) return;
+    // Row-paint: ignore if different person
+    if (personId !== selectionPersonId) return;
+    const key = `${personId}|${date}`;
+    set((s) => {
+      if (s.selectedCells.has(key)) return s; // already selected, skip re-render
+      const next = new Set(s.selectedCells);
+      next.add(key);
+      return { selectedCells: next };
+    });
+  },
+
+  endDragSelection: () => {
+    set({ isSelecting: false });
+  },
+
+  clearSelection: () => {
+    set({ selectedCells: new Set<string>(), selectionPersonId: null, isSelecting: false });
+  },
+
+  batchAssign: async (workItemId, mode = 'replace') => {
+    const { selectedCells, allocations, currentScenarioId } = get();
     if (selectedCells.size === 0) return;
 
     const scenarioId = currentScenarioId;
-    const allocs: Allocation[] = [];
-    for (const key of selectedCells) {
-      const [personId, date] = key.split('|');
-      allocs.push({
-        id: crypto.randomUUID(),
-        personId,
-        workItemId,
-        date,
-        days: 1,
-      });
-    }
+    const cp = cloudProps();
 
-    await db.allocations.bulkPut(
-      allocs.map((a) => ({ ...a, scenarioId }))
-    );
-    set((s) => ({
-      allocations: [...s.allocations, ...allocs],
-      selectedCells: new Set<string>(),
-    }));
+    if (mode === 'replace') {
+      // Delete existing allocations in selected cells first
+      const toDelete = allocations.filter((a) =>
+        selectedCells.has(`${a.personId}|${a.date}`)
+      );
+      if (toDelete.length > 0) {
+        await db.allocations.bulkDelete(toDelete.map((a) => a.id));
+      }
+
+      // Create new allocations
+      const allocs: Allocation[] = [];
+      for (const key of selectedCells) {
+        const [personId, date] = key.split('|');
+        allocs.push({
+          id: crypto.randomUUID(),
+          personId,
+          workItemId,
+          date,
+          days: 1,
+        });
+      }
+
+      await db.allocations.bulkPut(
+        allocs.map((a) => ({ ...a, scenarioId, ...cp }))
+      );
+
+      const deleteIds = new Set(toDelete.map((a) => a.id));
+      set((s) => ({
+        allocations: [
+          ...s.allocations.filter((a) => !deleteIds.has(a.id)),
+          ...allocs,
+        ],
+        selectedCells: new Set<string>(),
+        selectionPersonId: null,
+      }));
+    } else {
+      // Skip conflicts: only create allocation if no allocation exists for that cell
+      const existingKeys = new Set(
+        allocations.map((a) => `${a.personId}|${a.date}`)
+      );
+      const allocs: Allocation[] = [];
+      for (const key of selectedCells) {
+        if (existingKeys.has(key)) continue; // skip
+        const [personId, date] = key.split('|');
+        allocs.push({
+          id: crypto.randomUUID(),
+          personId,
+          workItemId,
+          date,
+          days: 1,
+        });
+      }
+
+      if (allocs.length > 0) {
+        await db.allocations.bulkPut(
+          allocs.map((a) => ({ ...a, scenarioId, ...cp }))
+        );
+      }
+
+      set((s) => ({
+        allocations: [...s.allocations, ...allocs],
+        selectedCells: new Set<string>(),
+        selectionPersonId: null,
+      }));
+    }
   },
 
   batchClear: async () => {
-    const { selectedCells, allocations, currentScenarioId } = get();
+    const { selectedCells, allocations } = get();
     if (selectedCells.size === 0) return;
 
     // Find all allocation IDs that match the selected cells
@@ -724,6 +872,7 @@ export const useStore = create<AppState>((set, get) => ({
     set((s) => ({
       allocations: s.allocations.filter((a) => !deleteIds.has(a.id)),
       selectedCells: new Set<string>(),
+      selectionPersonId: null,
     }));
   },
 
@@ -773,19 +922,21 @@ export const useStore = create<AppState>((set, get) => ({
     await db.allocations.clear();
     await db.timeOffs.clear();
 
-    await db.pods.bulkPut(data.pods);
-    await db.people.bulkPut(data.people);
+    const cp = cloudProps();
+
+    await db.pods.bulkPut(data.pods.map((p) => ({ ...p, ...cp })));
+    await db.people.bulkPut(data.people.map((p) => ({ ...p, ...cp })));
 
     for (const sd of data.scenarios) {
-      await db.scenarios.put(sd.scenario);
+      await db.scenarios.put({ ...sd.scenario, ...cp });
       await db.workItems.bulkPut(
-        sd.workItems.map((wi) => ({ ...wi, scenarioId: sd.scenario.id }))
+        sd.workItems.map((wi) => ({ ...wi, scenarioId: sd.scenario.id, ...cp }))
       );
       await db.allocations.bulkPut(
-        sd.allocations.map((a) => ({ ...a, scenarioId: sd.scenario.id }))
+        sd.allocations.map((a) => ({ ...a, scenarioId: sd.scenario.id, ...cp }))
       );
       await db.timeOffs.bulkPut(
-        sd.timeOffs.map((to) => ({ ...to, scenarioId: sd.scenario.id }))
+        sd.timeOffs.map((to) => ({ ...to, scenarioId: sd.scenario.id, ...cp }))
       );
     }
 
@@ -827,6 +978,8 @@ export const useStore = create<AppState>((set, get) => ({
       podFilterIds: [],
       editMode: false,
       selectedCells: new Set<string>(),
+      selectionPersonId: null,
+      isSelecting: false,
       dayDrawerOpen: false,
       selectedCellInfo: null,
       personDrawerOpen: false,
@@ -834,5 +987,15 @@ export const useStore = create<AppState>((set, get) => ({
     });
 
     await get().initialize();
+  },
+
+  inviteTeamMember: async (email) => {
+    if (!isCloudEnabled) return;
+    await db.table('members').add({
+      realmId: TEAM_REALM_ID,
+      email,
+      invite: true,
+      roles: ['editor'],
+    });
   },
 }));

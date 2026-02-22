@@ -1848,6 +1848,13 @@ input[type='date']::-webkit-calendar-picker-indicator {
   border-color: var(--accent-hover);
 }
 
+/* Edit mode: prevent text selection during drag */
+.roster-container--edit-mode {
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
 /* Edit mode cell cursor */
 .roster-cell--edit-mode {
   cursor: crosshair;
@@ -1859,6 +1866,7 @@ input[type='date']::-webkit-calendar-picker-indicator {
   outline-offset: -2px;
   background: #5a4a5a !important;
   position: relative;
+  z-index: 1;
 }
 
 .roster-cell--selected:hover {
@@ -1966,6 +1974,33 @@ input[type='date']::-webkit-calendar-picker-indicator {
   font-size: 12px;
   color: var(--risk-green);
   font-weight: 600;
+}
+
+/* Replace / Skip conflicts toggle */
+.selection-mode-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.selection-mode-btn {
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 4px 10px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: var(--text-muted) !important;
+  background: transparent !important;
+}
+
+.selection-mode-btn + .selection-mode-btn {
+  border-left: 1px solid var(--border) !important;
+}
+
+.selection-mode-btn--active {
+  background: var(--accent) !important;
+  color: var(--text-bright) !important;
 }
 
 /* ============================================
@@ -2489,4 +2524,27 @@ input[type='date']::-webkit-calendar-picker-indicator {
 .settings-confirm-actions {
   display: flex;
   gap: 8px;
+}
+
+.settings-invite-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.settings-invite-input {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.85rem;
+  min-width: 220px;
+}
+
+.settings-invite-msg {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: var(--text-dim);
 }

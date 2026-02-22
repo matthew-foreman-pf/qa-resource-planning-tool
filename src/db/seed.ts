@@ -732,3 +732,6 @@ export const basePlanScenario: Scenario = {
   name: 'Base Plan',
   isBase: true,
 };
+
+/** Fixed realm ID for the shared team planning data (Dexie Cloud) */
+export const TEAM_REALM_ID = 'rlm-team-planning';

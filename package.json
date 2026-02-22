@@ -11,6 +11,7 @@
   "dependencies": {
     "date-fns": "^4.1.0",
     "dexie": "^4.0.11",
+    "dexie-cloud-addon": "^4.3.9",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "zustand": "^5.0.3"

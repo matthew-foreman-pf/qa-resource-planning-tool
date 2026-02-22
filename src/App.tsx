@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useStore } from './store';
+import { isCloudEnabled } from './db';
 import { Nav } from './components/Layout/Nav';
 import { ScenarioSelector } from './components/Scenarios/ScenarioSelector';
 import { RosterScreen } from './components/Roster/RosterScreen';
@@ -23,7 +24,7 @@ export default function App() {
   if (!ready) {
     return (
       <div className="loading">
-        <p>Loading QA Resource Planner...</p>
+        <p>{isCloudEnabled ? 'Signing in and syncing...' : 'Loading QA Resource Planner...'}</p>
       </div>
     );
   }

@@ -13,6 +13,7 @@ export function SelectionActionBar() {
   const [wiId, setWiId] = useState('');
   const [search, setSearch] = useState('');
   const [msg, setMsg] = useState('');
+  const [mode, setMode] = useState<'replace' | 'skip'>('replace');
 
   const filteredWIs = useMemo(() => {
     if (!search) return workItems;
@@ -28,18 +29,21 @@ export function SelectionActionBar() {
 
   const handleAssign = async () => {
     if (!wiId) return;
-    await batchAssign(wiId);
-    setMsg(`Assigned to ${selectedCells.size} cell(s)`);
+    const count = selectedCells.size;
+    await batchAssign(wiId, mode);
+    const wi = workItems.find((w) => w.id === wiId);
+    const label = wi ? getWorkItemLabel(wi) : 'work item';
+    setMsg(`Assigned ${label} to ${count} cell(s) (${mode})`);
     setWiId('');
     setSearch('');
-    setTimeout(() => setMsg(''), 2500);
+    setTimeout(() => setMsg(''), 3000);
   };
 
   const handleClear = async () => {
     const count = selectedCells.size;
     await batchClear();
     setMsg(`Cleared ${count} cell(s)`);
-    setTimeout(() => setMsg(''), 2500);
+    setTimeout(() => setMsg(''), 3000);
   };
 
   return (
@@ -49,7 +53,7 @@ export function SelectionActionBar() {
           {selectedCells.size} cell{selectedCells.size !== 1 ? 's' : ''} selected
         </span>
         <button className="btn btn--sm" onClick={clearSelection}>
-          Deselect All
+          Cancel
         </button>
       </div>
 
@@ -74,6 +78,22 @@ export function SelectionActionBar() {
               </option>
             ))}
           </select>
+          <div className="selection-mode-toggle">
+            <button
+              className={`btn btn--sm selection-mode-btn ${mode === 'replace' ? 'selection-mode-btn--active' : ''}`}
+              onClick={() => setMode('replace')}
+              title="Replace existing allocations in selected cells"
+            >
+              Replace
+            </button>
+            <button
+              className={`btn btn--sm selection-mode-btn ${mode === 'skip' ? 'selection-mode-btn--active' : ''}`}
+              onClick={() => setMode('skip')}
+              title="Only assign to empty cells, skip cells that already have allocations"
+            >
+              Skip conflicts
+            </button>
+          </div>
           <button
             className="btn btn--primary btn--sm"
             onClick={handleAssign}
@@ -83,7 +103,7 @@ export function SelectionActionBar() {
           </button>
         </div>
         <button className="btn btn--danger btn--sm" onClick={handleClear}>
-          Clear Assignments
+          Clear
         </button>
       </div>
 

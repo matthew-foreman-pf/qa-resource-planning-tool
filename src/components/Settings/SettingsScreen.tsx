@@ -1,10 +1,16 @@
 import { useState } from 'react';
 import { useStore } from '../../store';
+import { isCloudEnabled } from '../../db';
 
 export function SettingsScreen() {
   const resetData = useStore((s) => s.resetData);
+  const inviteTeamMember = useStore((s) => s.inviteTeamMember);
   const [showConfirm, setShowConfirm] = useState(false);
   const [resetting, setResetting] = useState(false);
+
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviting, setInviting] = useState(false);
+  const [inviteMsg, setInviteMsg] = useState('');
 
   const handleReset = async () => {
     setResetting(true);
@@ -13,10 +19,63 @@ export function SettingsScreen() {
     setShowConfirm(false);
   };
 
+  const handleInvite = async () => {
+    if (!inviteEmail.trim()) return;
+    setInviting(true);
+    setInviteMsg('');
+    try {
+      await inviteTeamMember(inviteEmail.trim());
+      setInviteMsg(`Invitation sent to ${inviteEmail.trim()}`);
+      setInviteEmail('');
+    } catch {
+      setInviteMsg('Failed to send invitation. Please try again.');
+    }
+    setInviting(false);
+  };
+
   return (
     <div className="settings-screen">
       <h2>Settings</h2>
       <p className="screen-subtitle">Application configuration and data management</p>
+
+      {isCloudEnabled && (
+        <section className="settings-section">
+          <h3>Team Members</h3>
+
+          <div className="settings-card">
+            <div className="settings-card-info">
+              <h4>Invite Team Member</h4>
+              <p>
+                Invite a team member by email. They will receive a login link
+                and gain access to all shared planning data.
+              </p>
+            </div>
+            <div className="settings-card-action">
+              <div className="settings-invite-row">
+                <input
+                  type="email"
+                  className="settings-invite-input"
+                  placeholder="email@example.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
+                  disabled={inviting}
+                />
+                <button
+                  className="btn btn--primary"
+                  onClick={handleInvite}
+                  disabled={inviting || !inviteEmail.trim()}
+                >
+                  {inviting ? 'Inviting...' : 'Invite'}
+                </button>
+              </div>
+              {inviteMsg && (
+                <p className="settings-invite-msg">{inviteMsg}</p>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="settings-section">
         <h3>Data Management</h3>

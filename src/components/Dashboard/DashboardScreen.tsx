@@ -1,71 +1,162 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useStore } from '../../store';
-import { getPlanningWeeks, toDateStr, fromDateStr, formatDate } from '../../utils/dates';
+import { getPlanningWeeks, toDateStr, fromDateStr, formatDate, today } from '../../utils/dates';
+import type { WeekInfo } from '../../utils/dates';
 import {
-  computeCoverageRisks,
-  computeFeasibilityRisks,
-  getWorstRisk,
-} from '../../utils/risks';
-import { getWorkItemLabel, getPodName } from '../../utils/helpers';
-import type { RiskLevel, WorkItem } from '../../types';
-import { differenceInCalendarDays } from 'date-fns';
+  getWorkItemLabel,
+  getPodColor,
+  getPersonWeekPodBreakdown,
+} from '../../utils/helpers';
+import { buildPodGroups } from '../../utils/grouping';
+import type { WorkItem, Person, Allocation } from '../../types';
+import { differenceInCalendarDays, format } from 'date-fns';
 
 export function DashboardScreen() {
+  const people = useStore((s) => s.people);
+  const pods = useStore((s) => s.pods);
   const workItems = useStore((s) => s.workItems);
   const allocations = useStore((s) => s.allocations);
-  const pods = useStore((s) => s.pods);
-  const people = useStore((s) => s.people);
+  const scenarios = useStore((s) => s.scenarios);
+  const currentScenarioId = useStore((s) => s.currentScenarioId);
+  const showArchivedPeople = useStore((s) => s.showArchivedPeople);
 
   const weeks = useMemo(() => getPlanningWeeks(12), []);
-  const next2Weeks = useMemo(() => weeks.slice(0, 2), [weeks]);
 
-  // Coverage risks for next 2 weeks
-  const coverageRisks = useMemo(
-    () => computeCoverageRisks(workItems, allocations, next2Weeks),
-    [workItems, allocations, next2Weeks]
+  const currentScenario = scenarios.find((s) => s.id === currentScenarioId);
+
+  return (
+    <div className="dashboard-screen">
+      <div className="dashboard-header">
+        <h2>Dashboard</h2>
+        <p className="screen-subtitle">Overview of your QA plan at a glance</p>
+      </div>
+      <DashboardSummary
+        scenario={currentScenario}
+        people={people}
+        allocations={allocations}
+        weeks={weeks}
+      />
+      <DashboardGantt
+        workItems={workItems}
+        pods={pods}
+        weeks={weeks}
+      />
+      <DashboardPeople
+        people={people}
+        pods={pods}
+        allocations={allocations}
+        workItems={workItems}
+        weeks={weeks}
+        showArchived={showArchivedPeople}
+      />
+    </div>
+  );
+}
+
+/* ---- Summary Strip ---- */
+
+function DashboardSummary({
+  scenario,
+  people,
+  allocations,
+  weeks,
+}: {
+  scenario: { id: string; name: string; isBase: boolean } | undefined;
+  people: Person[];
+  allocations: Allocation[];
+  weeks: WeekInfo[];
+}) {
+  const activePeople = useMemo(
+    () => people.filter((p) => p.status === 'active'),
+    [people]
   );
 
-  // Feasibility risks
-  const feasibilityRisks = useMemo(
-    () => computeFeasibilityRisks(workItems, allocations, weeks),
-    [workItems, allocations, weeks]
-  );
+  // Date range
+  const firstWeekStart = weeks[0]?.weekStart;
+  const lastWeek = weeks[weeks.length - 1];
+  const lastWeekEnd = lastWeek?.weekdays[lastWeek.weekdays.length - 1];
+  const dateRangeLabel = firstWeekStart && lastWeekEnd
+    ? `${format(firstWeekStart, 'MMM d')} \u2013 ${format(lastWeekEnd, 'MMM d, yyyy')}`
+    : '';
 
-  // Build risk list per work item
-  const workItemRisks = useMemo(() => {
-    const results: {
-      workItem: WorkItem;
-      coverageLevels: RiskLevel[];
-      feasibilityLevel: RiskLevel;
-      worstLevel: RiskLevel;
-    }[] = [];
-
-    for (const wi of workItems) {
-      const covRisks = coverageRisks
-        .filter((r) => r.workItemId === wi.id)
-        .map((r) => r.level);
-      const feasRisk = feasibilityRisks.find((r) => r.workItemId === wi.id);
-      const allLevels = [...covRisks, feasRisk?.level || 'green'];
-      const worst = getWorstRisk(allLevels);
-
-      results.push({
-        workItem: wi,
-        coverageLevels: covRisks,
-        feasibilityLevel: feasRisk?.level || 'green',
-        worstLevel: worst,
-      });
+  // All dates in the 12-week range
+  const allDates = useMemo(() => {
+    const dates = new Set<string>();
+    for (const w of weeks) {
+      for (const d of w.weekdays) {
+        dates.add(toDateStr(d));
+      }
     }
+    return dates;
+  }, [weeks]);
 
-    // Sort: red first, then yellow, then green
-    const order = { red: 0, yellow: 1, green: 2 };
-    results.sort((a, b) => order[a.worstLevel] - order[b.worstLevel]);
-    return results;
-  }, [workItems, coverageRisks, feasibilityRisks]);
+  // Total capacity: active people weeklyCapacityDays x 12 weeks
+  const totalCapacity = useMemo(
+    () => activePeople.reduce((sum, p) => sum + p.weeklyCapacityDays, 0) * weeks.length,
+    [activePeople, weeks]
+  );
 
-  // Only show items with risks
-  const riskyItems = workItemRisks.filter((r) => r.worstLevel !== 'green');
+  // Total assigned days in range
+  const totalAssigned = useMemo(
+    () => allocations.filter((a) => allDates.has(a.date)).reduce((sum, a) => sum + a.days, 0),
+    [allocations, allDates]
+  );
 
-  // Gantt data
+  const utilizationPct = totalCapacity > 0
+    ? Math.round((totalAssigned / totalCapacity) * 100)
+    : 0;
+
+  return (
+    <div className="dashboard-summary-strip">
+      <div className="summary-card summary-card--scenario">
+        <span className="summary-card-label">Scenario</span>
+        <span className="summary-card-value">
+          {scenario?.name || 'Unknown'}
+          {scenario?.isBase && <span className="summary-base-badge">Base</span>}
+        </span>
+      </div>
+      <div className="summary-card">
+        <span className="summary-card-label">Date Range</span>
+        <span className="summary-card-value">{dateRangeLabel}</span>
+      </div>
+      <div className="summary-card">
+        <span className="summary-card-label">Team Size</span>
+        <span className="summary-card-value">{activePeople.length}</span>
+      </div>
+      <div className="summary-card">
+        <span className="summary-card-label">Capacity</span>
+        <span className="summary-card-value">{totalCapacity}d</span>
+      </div>
+      <div className="summary-card">
+        <span className="summary-card-label">Assigned</span>
+        <span className="summary-card-value">{totalAssigned}d</span>
+      </div>
+      <div className="summary-card">
+        <span className="summary-card-label">Utilization</span>
+        <span className={`summary-card-value ${
+          utilizationPct >= 80 ? 'summary-value--high'
+            : utilizationPct >= 50 ? 'summary-value--mid'
+              : 'summary-value--low'
+        }`}>
+          {utilizationPct}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ---- Gantt Timeline ---- */
+
+function DashboardGantt({
+  workItems,
+  pods,
+  weeks,
+}: {
+  workItems: WorkItem[];
+  pods: { id: string; name: string }[];
+  weeks: WeekInfo[];
+}) {
+  // Group work items by pod
   const ganttByPod = useMemo(() => {
     const podGroups: Record<string, WorkItem[]> = {};
     for (const wi of workItems) {
@@ -75,138 +166,316 @@ export function DashboardScreen() {
     return podGroups;
   }, [workItems]);
 
-  // Work item risk map for Gantt coloring
-  const wiRiskMap = useMemo(() => {
-    const map: Record<string, RiskLevel> = {};
-    for (const r of workItemRisks) {
-      map[r.workItem.id] = r.worstLevel;
-    }
-    return map;
-  }, [workItemRisks]);
-
   // Gantt timeline range
   const ganttStart = weeks[0]?.weekStart;
-  const ganttEnd = weeks[weeks.length - 1]?.weekdays[weeks[weeks.length - 1].weekdays.length - 1];
+  const lastWeek = weeks[weeks.length - 1];
+  const ganttEnd = lastWeek?.weekdays[lastWeek.weekdays.length - 1];
   const ganttTotalDays = ganttStart && ganttEnd
     ? differenceInCalendarDays(ganttEnd, ganttStart) + 1
     : 1;
 
+  // Today marker position
+  const todayDate = today();
+  const todayOffsetDays = ganttStart
+    ? differenceInCalendarDays(todayDate, ganttStart)
+    : -1;
+  const todayPct = todayOffsetDays >= 0 && todayOffsetDays <= ganttTotalDays
+    ? (todayOffsetDays / ganttTotalDays) * 100
+    : -1;
+
   return (
-    <div className="dashboard-screen">
-      <h2>Dashboard</h2>
-
-      <div className="dashboard-sections">
-        {/* Risk List */}
-        <section className="dashboard-section">
-          <h3>Risk Summary (Next 2 Weeks)</h3>
-          {riskyItems.length === 0 ? (
-            <p className="no-risks">No risks detected. All work items are on track.</p>
-          ) : (
-            <table className="risk-table">
-              <thead>
-                <tr>
-                  <th>Work Item</th>
-                  <th>Pod</th>
-                  <th>Coverage</th>
-                  <th>Feasibility</th>
-                  <th>Overall</th>
-                </tr>
-              </thead>
-              <tbody>
-                {riskyItems.map((r) => (
-                  <tr key={r.workItem.id}>
-                    <td>{r.workItem.name}</td>
-                    <td>{getPodName(pods, r.workItem.podId)}</td>
-                    <td>
-                      <span className={`risk-dot risk-dot--${getWorstRisk(r.coverageLevels)}`} />
-                      {getWorstRisk(r.coverageLevels)}
-                    </td>
-                    <td>
-                      <span className={`risk-dot risk-dot--${r.feasibilityLevel}`} />
-                      {r.feasibilityLevel}
-                    </td>
-                    <td>
-                      <span className={`risk-dot risk-dot--${r.worstLevel}`} />
-                      {r.worstLevel}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </section>
-
-        {/* Gantt Timeline */}
-        <section className="dashboard-section">
-          <h3>Timeline</h3>
-          <div className="gantt-container">
-            {/* Week headers */}
-            <div className="gantt-header">
-              <div className="gantt-label-col">Work Item</div>
-              <div className="gantt-timeline-col">
-                <div className="gantt-week-headers">
-                  {weeks.map((w) => (
-                    <div
-                      key={w.weekStartStr}
-                      className="gantt-week-header"
-                      style={{
-                        width: `${(w.weekdays.length / ganttTotalDays) * 100}%`,
-                      }}
-                    >
-                      {w.weekLabel}
-                    </div>
-                  ))}
+    <section className="dashboard-section">
+      <h3 className="dashboard-section-title">Timeline</h3>
+      <div className="gantt-container">
+        {/* Week headers */}
+        <div className="gantt-header">
+          <div className="gantt-label-col">Work Item</div>
+          <div className="gantt-timeline-col">
+            <div className="gantt-week-headers">
+              {weeks.map((w) => (
+                <div
+                  key={w.weekStartStr}
+                  className="gantt-week-header"
+                  style={{ width: `${(w.weekdays.length / ganttTotalDays) * 100}%` }}
+                >
+                  {w.weekLabel}
                 </div>
+              ))}
+            </div>
+            {/* Today marker in header */}
+            {todayPct >= 0 && (
+              <div
+                className="gantt-today-line gantt-today-line--header"
+                style={{ left: `${todayPct}%` }}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Pod groups */}
+        {pods.map((pod) => {
+          const items = ganttByPod[pod.id];
+          if (!items || items.length === 0) return null;
+          const podColor = getPodColor(pod.id);
+          return (
+            <div key={pod.id} className="gantt-pod-group">
+              <div
+                className="gantt-pod-header"
+                style={{ borderLeft: `3px solid ${podColor}` }}
+              >
+                {pod.name}
               </div>
+              {items.map((wi) => {
+                const start = fromDateStr(wi.startDate);
+                const end = fromDateStr(wi.endDate);
+                const offsetDays = Math.max(
+                  0,
+                  differenceInCalendarDays(start, ganttStart!)
+                );
+                const spanDays = differenceInCalendarDays(end, start) + 1;
+                const leftPct = (offsetDays / ganttTotalDays) * 100;
+                const widthPct = (spanDays / ganttTotalDays) * 100;
+
+                return (
+                  <div key={wi.id} className="gantt-row">
+                    <div className="gantt-label-col" title={wi.name}>
+                      {getWorkItemLabel(wi)}
+                    </div>
+                    <div className="gantt-timeline-col">
+                      {todayPct >= 0 && (
+                        <div
+                          className="gantt-today-line"
+                          style={{ left: `${todayPct}%` }}
+                        />
+                      )}
+                      <div
+                        className="gantt-bar"
+                        style={{
+                          left: `${leftPct}%`,
+                          width: `${widthPct}%`,
+                          background: `${podColor}22`,
+                          borderColor: podColor,
+                        }}
+                        title={`${wi.name}: ${formatDate(start)} \u2013 ${formatDate(end)}`}
+                      >
+                        <span className="gantt-bar-label">{wi.name}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/* ---- Pod-Grouped People List ---- */
+
+function DashboardPeople({
+  people,
+  pods,
+  allocations,
+  workItems,
+  weeks,
+  showArchived,
+}: {
+  people: Person[];
+  pods: { id: string; name: string }[];
+  allocations: Allocation[];
+  workItems: WorkItem[];
+  weeks: WeekInfo[];
+  showArchived: boolean;
+}) {
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+
+  const toggleGroup = useCallback((label: string) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(label)) {
+        next.delete(label);
+      } else {
+        next.add(label);
+      }
+      return next;
+    });
+  }, []);
+
+  // Filter people
+  const visiblePeople = useMemo(
+    () => showArchived ? people : people.filter((p) => p.status !== 'archived'),
+    [people, showArchived]
+  );
+
+  // Build pod groups
+  const podGroups = useMemo(
+    () => buildPodGroups(visiblePeople, pods, allocations, workItems),
+    [visiblePeople, pods, allocations, workItems]
+  );
+
+  // Current week dates for person breakdown
+  const currentWeekDates = useMemo(() => {
+    const week = weeks[0];
+    if (!week) return new Set<string>();
+    return new Set(week.weekdays.map(toDateStr));
+  }, [weeks]);
+
+  // WorkItemId -> PodId map
+  const wiPodMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const wi of workItems) map[wi.id] = wi.podId;
+    return map;
+  }, [workItems]);
+
+  // WorkItemId -> WorkItem map
+  const wiMap = useMemo(() => {
+    const map: Record<string, WorkItem> = {};
+    for (const wi of workItems) map[wi.id] = wi;
+    return map;
+  }, [workItems]);
+
+  // Current week label
+  const currentWeekLabel = weeks[0]?.weekLabel || '';
+
+  return (
+    <section className="dashboard-section">
+      <h3 className="dashboard-section-title">
+        Team Assignments
+        <span className="dashboard-section-subtitle">{currentWeekLabel}</span>
+      </h3>
+
+      {podGroups.map((group) => {
+        const collapsed = collapsedGroups.has(group.label);
+        return (
+          <div key={group.label} className="dashboard-group">
+            <div
+              className="dashboard-group-header"
+              onClick={() => toggleGroup(group.label)}
+            >
+              <span className={`group-collapse-icon ${collapsed ? 'collapsed' : ''}`}>
+                ▾
+              </span>
+              <span className="dashboard-group-label">{group.label}</span>
+              <span className="dashboard-group-count">
+                {group.pods.reduce((sum, sg) => sum + sg.people.length, 0)} people
+              </span>
             </div>
 
-            {/* Pod groups */}
-            {pods.map((pod) => {
-              const items = ganttByPod[pod.id];
-              if (!items || items.length === 0) return null;
-              return (
-                <div key={pod.id} className="gantt-pod-group">
-                  <div className="gantt-pod-header">{pod.name}</div>
-                  {items.map((wi) => {
-                    const start = fromDateStr(wi.startDate);
-                    const end = fromDateStr(wi.endDate);
-                    const offsetDays = Math.max(
-                      0,
-                      differenceInCalendarDays(start, ganttStart!)
-                    );
-                    const spanDays =
-                      differenceInCalendarDays(end, start) + 1;
-                    const leftPct =
-                      (offsetDays / ganttTotalDays) * 100;
-                    const widthPct =
-                      (spanDays / ganttTotalDays) * 100;
-                    const risk = wiRiskMap[wi.id] || 'green';
-
-                    return (
-                      <div key={wi.id} className="gantt-row">
-                        <div className="gantt-label-col" title={wi.name}>
-                          {getWorkItemLabel(wi)}
-                        </div>
-                        <div className="gantt-timeline-col">
-                          <div
-                            className={`gantt-bar gantt-bar--${risk}`}
-                            style={{
-                              left: `${leftPct}%`,
-                              width: `${widthPct}%`,
-                            }}
-                            title={`${formatDate(start)} - ${formatDate(end)}`}
-                          >
-                            <span className="gantt-bar-label">{wi.name}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
+            {!collapsed && (
+              <div className="dashboard-group-body">
+                {group.pods.map((subgroup) => (
+                  <div key={subgroup.pod.id}>
+                    {group.pods.length > 1 && !subgroup.pod.id.startsWith('__') && (
+                      <div className="dashboard-subgroup-header">{subgroup.pod.name}</div>
+                    )}
+                    {subgroup.people.map((person) => (
+                      <DashboardPersonCard
+                        key={person.id}
+                        person={person}
+                        currentWeekDates={currentWeekDates}
+                        allocations={allocations}
+                        wiPodMap={wiPodMap}
+                        wiMap={wiMap}
+                        pods={pods}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </section>
+        );
+      })}
+    </section>
+  );
+}
+
+/* ---- Person Card ---- */
+
+function DashboardPersonCard({
+  person,
+  currentWeekDates,
+  allocations,
+  wiPodMap,
+  wiMap,
+  pods,
+}: {
+  person: Person;
+  currentWeekDates: Set<string>;
+  allocations: Allocation[];
+  wiPodMap: Record<string, string>;
+  wiMap: Record<string, WorkItem>;
+  pods: { id: string; name: string }[];
+}) {
+  const isArchived = person.status === 'archived';
+
+  // Pod breakdown for current week
+  const breakdown = useMemo(
+    () => getPersonWeekPodBreakdown(person.id, currentWeekDates, allocations, wiPodMap, pods),
+    [person.id, currentWeekDates, allocations, wiPodMap, pods]
+  );
+
+  // Build assignment summary text: group allocations by work item
+  const weekSummary = useMemo(() => {
+    const wiDays: Record<string, number> = {};
+    for (const a of allocations) {
+      if (a.personId !== person.id) continue;
+      if (!currentWeekDates.has(a.date)) continue;
+      wiDays[a.workItemId] = (wiDays[a.workItemId] || 0) + a.days;
+    }
+
+    if (Object.keys(wiDays).length === 0) return null;
+
+    return Object.entries(wiDays)
+      .sort((a, b) => b[1] - a[1])
+      .map(([wiId, days]) => {
+        const wi = wiMap[wiId];
+        const label = wi ? getWorkItemLabel(wi) : '?';
+        return `${label} (${days}d)`;
+      });
+  }, [person.id, currentWeekDates, allocations, wiMap]);
+
+  const roleLabel = person.role === 'qa_lead'
+    ? 'QA Lead'
+    : person.role === 'pod_lead'
+      ? 'Pod Lead'
+      : 'Tester';
+
+  // Dominant pod color
+  const chipColor = breakdown.topPodId ? getPodColor(breakdown.topPodId) : undefined;
+
+  return (
+    <div className={`dashboard-person-card ${isArchived ? 'dashboard-person-card--archived' : ''}`}>
+      <div className="dashboard-person-info">
+        <span className="dashboard-person-name">{person.name}</span>
+        <span className={`dashboard-role-badge dashboard-role-badge--${person.role}`}>
+          {roleLabel}
+        </span>
+        <span className={`dashboard-type-badge dashboard-type-badge--${person.type}`}>
+          {person.type === 'internal' ? 'Int' : 'Vnd'}
+        </span>
+        {isArchived && <span className="dashboard-archived-badge">Archived</span>}
+      </div>
+      <div className="dashboard-person-assignments">
+        {weekSummary ? (
+          <>
+            {chipColor && (
+              <span
+                className="dashboard-pod-dot"
+                style={{ background: chipColor }}
+              />
+            )}
+            <span className="dashboard-week-summary">
+              {weekSummary.join(', ')}
+            </span>
+          </>
+        ) : (
+          <span className="dashboard-week-summary dashboard-week-summary--available">
+            Available
+          </span>
+        )}
       </div>
     </div>
   );

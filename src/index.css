@@ -841,70 +841,110 @@ h4 {
   max-width: 1200px;
 }
 
-.dashboard-sections {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+.dashboard-header {
+  margin-bottom: 16px;
 }
 
+/* ---- Summary Strip ---- */
+.dashboard-summary-strip {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.summary-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 16px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-subtle);
+  min-width: 80px;
+}
+
+.summary-card--scenario {
+  min-width: 120px;
+}
+
+.summary-card-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.summary-card-value {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-bright);
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.summary-base-badge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--accent);
+  color: var(--text-bright);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.summary-value--high {
+  color: var(--risk-green);
+}
+
+.summary-value--mid {
+  color: var(--risk-yellow);
+}
+
+.summary-value--low {
+  color: var(--text-muted);
+}
+
+/* ---- Dashboard Sections ---- */
 .dashboard-section {
   background: var(--surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 16px;
+  margin-bottom: 16px;
 }
 
-.no-risks {
-  color: var(--text-muted);
-  padding: 12px 0;
+.dashboard-section-title {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* Risk table */
-.risk-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.risk-table th,
-.risk-table td {
-  padding: 8px 12px;
-  text-align: left;
-  border-bottom: 1px solid var(--border-subtle);
-  font-size: 13px;
-  color: var(--text);
-}
-
-.risk-table th {
-  background: var(--surface-raised);
-  font-weight: 600;
+.dashboard-section-subtitle {
   font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
+  font-weight: 500;
   color: var(--text-muted);
+  font-family: 'Inter', sans-serif;
 }
 
-.risk-dot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  margin-right: 6px;
-  vertical-align: middle;
-}
-
-.risk-dot--green {
-  background: var(--risk-green);
-}
-
-.risk-dot--yellow {
-  background: var(--risk-yellow);
-}
-
-.risk-dot--red {
-  background: var(--risk-red);
-}
-
-/* Gantt */
+/* ---- Gantt ---- */
 .gantt-container {
   overflow-x: auto;
 }
@@ -939,7 +979,9 @@ h4 {
 }
 
 .gantt-week-header {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
   font-size: 10px;
+  font-weight: 600;
   color: var(--text-muted);
   text-align: center;
   padding: 4px 0;
@@ -953,11 +995,12 @@ h4 {
 .gantt-pod-header {
   font-size: 12px;
   font-weight: 700;
-  padding: 4px 8px;
+  padding: 6px 10px;
   background: var(--surface-raised);
   border-radius: var(--radius);
   margin-bottom: 2px;
   color: var(--text-bright);
+  letter-spacing: -0.1px;
 }
 
 .gantt-row {
@@ -979,26 +1022,17 @@ h4 {
   position: absolute;
   top: 4px;
   height: 20px;
-  border-radius: 3px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   padding: 0 6px;
   overflow: hidden;
+  border: 1px solid;
+  transition: opacity 0.15s;
 }
 
-.gantt-bar--green {
-  background: #1a3a2a;
-  border: 1px solid #2d6b45;
-}
-
-.gantt-bar--yellow {
-  background: #3a3520;
-  border: 1px solid #6b6020;
-}
-
-.gantt-bar--red {
-  background: #3e2020;
-  border: 1px solid #6b3030;
+.gantt-bar:hover {
+  opacity: 0.85;
 }
 
 .gantt-bar-label {
@@ -1007,6 +1041,188 @@ h4 {
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--text);
+}
+
+/* Today marker line */
+.gantt-today-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--accent);
+  opacity: 0.6;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.gantt-today-line--header {
+  top: 0;
+  bottom: -2px;
+}
+
+/* ---- Dashboard People (Pod-Grouped List) ---- */
+.dashboard-group {
+  margin-bottom: 4px;
+}
+
+.dashboard-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--surface-raised);
+  border-radius: var(--radius);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.dashboard-group-header:hover {
+  background: var(--border-subtle);
+}
+
+.dashboard-group-label {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-bright);
+  letter-spacing: -0.1px;
+}
+
+.dashboard-group-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.dashboard-group-body {
+  padding: 4px 0 4px 12px;
+}
+
+.dashboard-subgroup-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 6px 8px 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.dashboard-person-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  transition: background 0.1s;
+  gap: 12px;
+}
+
+.dashboard-person-card:hover {
+  background: var(--surface-raised);
+}
+
+.dashboard-person-card--archived {
+  opacity: 0.45;
+}
+
+.dashboard-person-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.dashboard-person-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.dashboard-role-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.dashboard-role-badge--qa_lead {
+  background: #715A5A;
+  color: #D3DAD9;
+}
+
+.dashboard-role-badge--pod_lead {
+  background: #44444E;
+  color: #D3DAD9;
+  border: 1px solid #55555F;
+}
+
+.dashboard-role-badge--tester {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+}
+
+.dashboard-type-badge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 4px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.dashboard-type-badge--internal {
+  color: var(--text-muted);
+}
+
+.dashboard-type-badge--vendor {
+  color: #b5a06b;
+  border: 1px solid #6b6020;
+}
+
+.dashboard-archived-badge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--border-subtle);
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.dashboard-person-assignments {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.dashboard-pod-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dashboard-week-summary {
+  font-size: 11px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 400px;
+}
+
+.dashboard-week-summary--available {
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 /* ============================================
@@ -1665,8 +1881,9 @@ input[type='date']::-webkit-calendar-picker-indicator {
 .people-toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 12px;
+  flex-wrap: wrap;
 }
 
 .people-search {
@@ -1793,6 +2010,114 @@ input[type='date']::-webkit-calendar-picker-indicator {
   text-align: center;
   color: var(--text-muted);
   padding: 24px 14px !important;
+}
+
+/* Filter selects in toolbar */
+.people-filter-select {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-family: inherit;
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+/* Checkbox column */
+.people-th-check,
+.people-td-check {
+  width: 36px;
+  text-align: center;
+  padding: 8px 6px !important;
+}
+
+.people-th-check input[type='checkbox'],
+.people-td-check input[type='checkbox'] {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+/* Selected row highlight */
+.people-row--selected {
+  background: rgba(113, 90, 90, 0.14) !important;
+}
+
+/* Sticky selection toolbar */
+.people-selection-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 90;
+  background: var(--surface);
+  border-top: 2px solid var(--accent);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+  animation: action-bar-slide-up 0.15s ease-out;
+  flex-wrap: wrap;
+}
+
+.people-selection-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.people-selection-count {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-bright);
+  white-space: nowrap;
+}
+
+.people-selection-bar-center {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.people-selection-pod-select {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-family: inherit;
+  background: var(--surface-raised);
+  color: var(--text);
+  min-width: 180px;
+}
+
+.people-selection-preview {
+  font-size: 12px;
+  color: var(--risk-green);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.people-selection-hint {
+  font-size: 11px;
+  color: var(--risk-yellow);
+  font-weight: 500;
+}
+
+.people-selection-msg {
+  font-size: 12px;
+  color: var(--risk-green);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.people-selection-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--border);
+  flex-shrink: 0;
 }
 
 /* ============================================
@@ -1930,10 +2255,22 @@ input[type='date']::-webkit-calendar-picker-indicator {
    CROSS-POD INDICATORS
    ============================================ */
 
-/* Left border stripe on cross-pod cells */
+/* Dog-ear triangle on cross-pod cells */
 .roster-cell--cross-pod {
-  border-left: 3px solid #e0a040 !important;
   position: relative;
+}
+
+.roster-cell--cross-pod::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-top: 10px solid var(--assigned-pod-color, #e0a040);
+  border-left: 10px solid transparent;
+  opacity: 0.9;
+  pointer-events: none;
 }
 
 /* Cross-pod chip in person row header */

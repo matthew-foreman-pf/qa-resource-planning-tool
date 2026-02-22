@@ -12,6 +12,7 @@ export interface Person {
   name: string;
   role: PersonRole;
   homePodId?: string;
+  leadId?: string; // references a Person.id where role is qa_lead or pod_lead
   type: PersonType;
   weeklyCapacityDays: number;
   status: PersonStatus;

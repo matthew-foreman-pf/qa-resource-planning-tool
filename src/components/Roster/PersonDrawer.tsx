@@ -71,10 +71,17 @@ function ProfileSection({
   pods: ReturnType<typeof useStore.getState>['pods'];
   updatePerson: ReturnType<typeof useStore.getState>['updatePerson'];
 }) {
+  const people = useStore((s) => s.people);
+  const eligibleLeads = useMemo(
+    () => people.filter((p) => (p.role === 'qa_lead' || p.role === 'pod_lead') && p.status === 'active'),
+    [people]
+  );
+
   const [name, setName] = useState(person.name);
   const [role, setRole] = useState<PersonRole>(person.role);
   const [type, setType] = useState<PersonType>(person.type);
   const [homePodId, setHomePodId] = useState(person.homePodId || '');
+  const [leadId, setLeadId] = useState(person.leadId || '');
   const [saved, setSaved] = useState(false);
 
   const handleSave = async () => {
@@ -84,6 +91,7 @@ function ProfileSection({
       role,
       type,
       homePodId: homePodId || undefined,
+      leadId: leadId || undefined,
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
@@ -123,6 +131,17 @@ function ProfileSection({
           {pods.map((pod) => (
             <option key={pod.id} value={pod.id}>
               {pod.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="form-group">
+        <label>Lead</label>
+        <select value={leadId} onChange={(e) => setLeadId(e.target.value)}>
+          <option value="">None</option>
+          {eligibleLeads.map((lead) => (
+            <option key={lead.id} value={lead.id}>
+              {lead.name} ({lead.role === 'qa_lead' ? 'QA Lead' : 'Pod Lead'})
             </option>
           ))}
         </select>

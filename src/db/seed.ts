@@ -87,18 +87,28 @@ export const seedPeople: Person[] = [
   },
 ];
 
-// 25 vendor testers
-for (let i = 1; i <= 25; i++) {
+// 27 vendor testers
+for (let i = 1; i <= 27; i++) {
   const num = String(i).padStart(2, '0');
-  seedPeople.push({
+  const person: Person = {
     id: `person-vendor-${num}`,
     name: `Vendor QA ${num}`,
     role: 'tester',
     type: 'vendor',
     weeklyCapacityDays: 5,
-
     status: 'active',
-  });
+  };
+
+  // Vendors 24-25: no home pod, assigned to Emily as lead
+  if (i === 24 || i === 25) {
+    person.leadId = 'person-emily';
+    // no homePodId — these are "floating" testers under Emily
+  }
+
+  // Vendors 26-27: no home pod, no lead — will appear in "Unassigned (Needs Owner)"
+  // (no extra fields needed — just no homePodId and no leadId)
+
+  seedPeople.push(person);
 }
 
 // ---- Work Items ----

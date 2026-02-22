@@ -8,6 +8,7 @@ import {
   isCrossPodAllocation,
   getPodName,
   getPodPrefix,
+  getPodColor,
 } from '../../utils/helpers';
 import type { PersonWeekPodBreakdown, PersonWeekCrossPodBreakdown } from '../../utils/helpers';
 import { buildPodGroups, computeGroupWeeklySummary } from '../../utils/grouping';
@@ -471,11 +472,19 @@ const PersonRow = memo(function PersonRow({
             isArchived && person.archivedAt && dateStr > person.archivedAt;
 
           // Check if any allocation on this cell is cross-pod
-          const hasCrossPod =
-            !isPastArchive &&
-            !isOff &&
-            allocs.length > 0 &&
-            allocs.some((a) => isCrossPodAllocation(a, person, wiPodMap));
+          const crossPodAllocs = (!isPastArchive && !isOff && allocs.length > 0)
+            ? allocs.filter((a) => isCrossPodAllocation(a, person, wiPodMap))
+            : [];
+          const hasCrossPod = crossPodAllocs.length > 0;
+
+          // Determine the assigned pod color for the dog-ear triangle
+          // Use the first cross-pod allocation's pod color
+          let assignedPodColor: string | undefined;
+          if (hasCrossPod) {
+            const firstCrossAlloc = crossPodAllocs[0];
+            const crossPodId = wiPodMap[firstCrossAlloc.workItemId];
+            if (crossPodId) assignedPodColor = getPodColor(crossPodId);
+          }
 
           let cellClass = 'roster-cell';
           if (di === 0) cellClass += ' roster-week-start';
@@ -500,35 +509,44 @@ const PersonRow = memo(function PersonRow({
             return wi ? getWorkItemLabel(wi) : '?';
           });
 
-          // Build cross-pod tooltip info
+          // Build tooltip — cross-pod format per spec
           let cellTitle: string;
           if (isPastArchive) {
             cellTitle = 'Archived';
           } else if (isOff) {
             cellTitle = 'Time Off';
           } else if (allocs.length > 0) {
-            const lines = wiNames.join(', ');
             if (hasCrossPod && person.homePodId) {
               const homeName = getPodName(pods, person.homePodId);
-              const crossItems = allocs
-                .filter((a) => isCrossPodAllocation(a, person, wiPodMap))
-                .map((a) => {
-                  const wi = wiMap[a.workItemId];
-                  const assignedPod = wi ? getPodName(pods, wi.podId) : '?';
-                  return `  → ${wi ? getWorkItemLabel(wi) : '?'} (${assignedPod})`;
-                });
-              cellTitle = `${lines}\n\n✦ Cross-pod (Home: ${homeName}):\n${crossItems.join('\n')}`;
+              const tooltipLines = crossPodAllocs.map((a) => {
+                const wi = wiMap[a.workItemId];
+                const assignedPodName = wi ? getPodName(pods, wi.podId) : '?';
+                const featureLabel = wi ? getWorkItemLabel(wi) : '?';
+                return [
+                  'Cross-pod assignment',
+                  `Home: ${homeName}`,
+                  `Assigned: ${assignedPodName}`,
+                  `Feature: ${featureLabel}`,
+                ].join('\n');
+              });
+              cellTitle = tooltipLines.join('\n\n');
             } else {
-              cellTitle = lines;
+              cellTitle = wiNames.join(', ');
             }
           } else {
             cellTitle = 'Available';
           }
 
+          // Inline style for the dog-ear CSS variable
+          const cellStyle = assignedPodColor
+            ? { '--assigned-pod-color': assignedPodColor } as React.CSSProperties
+            : undefined;
+
           return (
             <div
               key={dateStr}
               className={cellClass}
+              style={cellStyle}
               onClick={() => !isPastArchive && onCellClick(person.id, dateStr)}
               title={cellTitle}
             >

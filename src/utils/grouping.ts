@@ -14,9 +14,15 @@ const LEAD_POD_MAP: Record<string, string[]> = {
 
 /**
  * Build pod groups for the roster.
- * Emily (QA Lead) gets her own group at the top.
- * Each pod lead gets a group containing their pod(s).
- * Testers are assigned to groups based on their allocations.
+ *
+ * Grouping rules:
+ * 1. Emily (QA Lead) gets her own top-level group.
+ * 2. Each pod lead gets a group containing their pod(s).
+ * 3. Testers with a homePodId are placed in that pod's subgroup.
+ * 4. Testers with NO homePodId but with a leadId are placed in a
+ *    "No Pod" subgroup under their lead's group.
+ * 5. Testers with NO homePodId and NO leadId go into
+ *    "Unassigned (Needs Owner)" at the bottom.
  */
 export function buildPodGroups(
   people: Person[],
@@ -27,37 +33,9 @@ export function buildPodGroups(
   const podMap = new Map(pods.map((p) => [p.id, p]));
   const leads = people.filter((p) => p.role === 'pod_lead');
   const qaLead = people.find((p) => p.role === 'qa_lead');
-
-  // Build workItem -> podId map
-  const wiPodMap = new Map(workItems.map((wi) => [wi.id, wi.podId]));
-
-  // Figure out which pod each tester is most associated with (by allocation count)
-  const testerPodAffinity = new Map<string, string>();
   const testers = people.filter((p) => p.role === 'tester');
-  for (const tester of testers) {
-    const podCounts: Record<string, number> = {};
-    for (const a of allocations) {
-      if (a.personId !== tester.id) continue;
-      const podId = wiPodMap.get(a.workItemId);
-      if (podId) {
-        podCounts[podId] = (podCounts[podId] || 0) + 1;
-      }
-    }
-    // Pick pod with most allocations
-    let bestPod = '';
-    let bestCount = 0;
-    for (const [podId, count] of Object.entries(podCounts)) {
-      if (count > bestCount) {
-        bestPod = podId;
-        bestCount = count;
-      }
-    }
-    if (bestPod) {
-      testerPodAffinity.set(tester.id, bestPod);
-    }
-  }
 
-  // Map podId -> leadId
+  // Map podId -> leadId (from LEAD_POD_MAP)
   const podToLead = new Map<string, string>();
   for (const [leadId, podIds] of Object.entries(LEAD_POD_MAP)) {
     for (const pid of podIds) {
@@ -65,21 +43,46 @@ export function buildPodGroups(
     }
   }
 
+  // Track placed tester IDs
+  const placedTesterIds = new Set<string>();
+
+  // Separate testers into three buckets:
+  // a) Has homePodId → goes to that pod's subgroup
+  // b) No homePodId but has leadId → goes to "No Pod" subgroup under lead
+  // c) No homePodId and no leadId → "Unassigned"
+
   const groups: PodGroup[] = [];
 
-  // Emily group first
+  // --- Emily group first ---
   if (qaLead) {
+    // Collect no-pod testers assigned to Emily via leadId
+    const emilyNoPodTesters = testers.filter(
+      (t) => !t.homePodId && t.leadId === qaLead.id
+    );
+    for (const t of emilyNoPodTesters) placedTesterIds.add(t.id);
+
+    const subgroups: PodSubgroup[] = [
+      {
+        pod: { id: '__qa_lead__', name: 'QA Lead' },
+        people: [qaLead],
+      },
+    ];
+
+    if (emilyNoPodTesters.length > 0) {
+      subgroups.push({
+        pod: { id: '__no_pod_emily__', name: 'No Pod' },
+        people: emilyNoPodTesters,
+      });
+    }
+
     groups.push({
       lead: qaLead,
       label: `QA Lead: ${qaLead.name}`,
-      pods: [{
-        pod: { id: '__qa_lead__', name: 'QA Lead' },
-        people: [qaLead],
-      }],
+      pods: subgroups,
     });
   }
 
-  // Pod lead groups
+  // --- Pod lead groups ---
   for (const lead of leads) {
     const podIds = LEAD_POD_MAP[lead.id] || (lead.homePodId ? [lead.homePodId] : []);
     if (podIds.length === 0) continue;
@@ -88,17 +91,17 @@ export function buildPodGroups(
     const label = `${podNames} (Lead: ${lead.name})`;
 
     const subgroups: PodSubgroup[] = [];
+
     for (const podId of podIds) {
       const pod = podMap.get(podId);
       if (!pod) continue;
 
-      // Get testers assigned to this pod
-      const podTesters = testers.filter(
-        (t) => testerPodAffinity.get(t.id) === podId
-      );
+      // Testers whose homePodId matches this pod
+      const podTesters = testers.filter((t) => t.homePodId === podId);
+      for (const t of podTesters) placedTesterIds.add(t.id);
 
-      // Lead goes in first subgroup only
       const podPeople: Person[] = [];
+      // Lead goes in first subgroup only
       if (podIds.indexOf(podId) === 0) {
         podPeople.push(lead);
       }
@@ -107,23 +110,28 @@ export function buildPodGroups(
       subgroups.push({ pod, people: podPeople });
     }
 
+    // No-pod testers assigned to this lead via leadId
+    const noPodTesters = testers.filter(
+      (t) => !t.homePodId && t.leadId === lead.id
+    );
+    for (const t of noPodTesters) placedTesterIds.add(t.id);
+
+    if (noPodTesters.length > 0) {
+      subgroups.push({
+        pod: { id: `__no_pod_${lead.id}__`, name: 'No Pod' },
+        people: noPodTesters,
+      });
+    }
+
     groups.push({ lead, label, pods: subgroups });
   }
 
-  // Unassigned testers (no allocations at all)
-  const assignedTesterIds = new Set<string>();
-  for (const g of groups) {
-    for (const sg of g.pods) {
-      for (const p of sg.people) {
-        assignedTesterIds.add(p.id);
-      }
-    }
-  }
-  const unassigned = testers.filter((t) => !assignedTesterIds.has(t.id));
+  // --- Unassigned (Needs Owner) ---
+  const unassigned = testers.filter((t) => !placedTesterIds.has(t.id));
   if (unassigned.length > 0) {
     groups.push({
       lead: null,
-      label: 'Unassigned',
+      label: 'Unassigned (Needs Owner)',
       pods: [{
         pod: { id: '__unassigned__', name: 'Unassigned' },
         people: unassigned,

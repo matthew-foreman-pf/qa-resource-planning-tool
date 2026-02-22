@@ -97,6 +97,19 @@ interface AppState {
     deleteConflictIds: string[],
   ) => Promise<void>;
 
+  // Bulk home pod update
+  batchUpdatePeopleHomePod: (
+    personIds: string[],
+    destinationPodId: string,
+    updatePodLeadDefaultFilter: boolean,
+  ) => Promise<void>;
+
+  // Bulk lead assignment
+  batchUpdatePeopleLead: (
+    personIds: string[],
+    leadId: string,
+  ) => Promise<void>;
+
   // Time off
   addTimeOff: (to: TimeOff) => Promise<void>;
   removeTimeOff: (id: string) => Promise<void>;
@@ -467,6 +480,43 @@ export const useStore = create<AppState>((set, get) => ({
             : a
         ),
     }));
+  },
+
+  batchUpdatePeopleHomePod: async (personIds, destinationPodId, updatePodLeadDefaultFilter) => {
+    if (personIds.length === 0) return;
+    const idSet = new Set(personIds);
+    const { people } = get();
+
+    const updatedPeople = people.map((p) => {
+      if (!idSet.has(p.id)) return p;
+      const updated = { ...p, homePodId: destinationPodId };
+      if (updatePodLeadDefaultFilter && p.role === 'pod_lead') {
+        updated.defaultPodFilterIds = [destinationPodId];
+      }
+      return updated;
+    });
+
+    // Batch persist to Dexie
+    const toWrite = updatedPeople.filter((p) => idSet.has(p.id));
+    await db.people.bulkPut(toWrite);
+
+    set({ people: updatedPeople });
+  },
+
+  batchUpdatePeopleLead: async (personIds, leadId) => {
+    if (personIds.length === 0) return;
+    const idSet = new Set(personIds);
+    const { people } = get();
+
+    const updatedPeople = people.map((p) => {
+      if (!idSet.has(p.id)) return p;
+      return { ...p, leadId };
+    });
+
+    const toWrite = updatedPeople.filter((p) => idSet.has(p.id));
+    await db.people.bulkPut(toWrite);
+
+    set({ people: updatedPeople });
   },
 
   addTimeOff: async (to) => {

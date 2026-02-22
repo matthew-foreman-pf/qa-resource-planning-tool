@@ -6,6 +6,7 @@ const podPrefixMap: Record<string, string> = {
   'pod-tp': 'TP',
   'pod-ss': 'SS',
   'pod-la': 'LA',
+  'pod-qa': 'QA',
 };
 
 export function getPodPrefix(podId: string): string {
@@ -27,6 +28,7 @@ export const POD_COLORS: Record<string, string> = {
   'pod-tp': '#b57b6b',
   'pod-ss': '#8b6bab',
   'pod-la': '#5ba3a3',
+  'pod-qa': '#a89b5b',
 };
 
 export function getPodColor(podId: string): string {

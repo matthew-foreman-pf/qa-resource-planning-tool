@@ -7,6 +7,7 @@ import { DashboardScreen } from './components/Dashboard/DashboardScreen';
 import { EditPlanScreen } from './components/EditPlan/EditPlanScreen';
 import { WorkItemsScreen } from './components/WorkItems/WorkItemsScreen';
 import { PeopleScreen } from './components/People/PeopleScreen';
+import { SettingsScreen } from './components/Settings/SettingsScreen';
 import { AddPersonDrawer } from './components/Roster/AddPersonDrawer';
 import { PersonDrawer } from './components/Roster/PersonDrawer';
 
@@ -39,6 +40,7 @@ export default function App() {
         {currentScreen === 'editPlan' && <EditPlanScreen />}
         {currentScreen === 'workItems' && <WorkItemsScreen />}
         {currentScreen === 'people' && <PeopleScreen />}
+        {currentScreen === 'settings' && <SettingsScreen />}
       </main>
       <PersonDrawer />
       <AddPersonDrawer />

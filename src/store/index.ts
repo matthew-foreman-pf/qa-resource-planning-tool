@@ -30,7 +30,7 @@ interface AppState {
   timeOffs: TimeOff[];
 
   // UI state
-  currentScreen: 'roster' | 'dashboard' | 'editPlan' | 'workItems' | 'people';
+  currentScreen: 'roster' | 'dashboard' | 'editPlan' | 'workItems' | 'people' | 'settings';
   selectedCellInfo: {
     personId: string;
     date: string;
@@ -134,6 +134,9 @@ interface AppState {
   // Import/Export
   exportData: () => Promise<AppData>;
   importData: (data: AppData) => Promise<void>;
+
+  // Reset
+  resetData: () => Promise<void>;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -800,5 +803,36 @@ export const useStore = create<AppState>((set, get) => ({
     if (firstScenarioId) {
       await get().loadScenarioData(firstScenarioId);
     }
+  },
+
+  resetData: async () => {
+    // Clear all tables
+    await db.pods.clear();
+    await db.people.clear();
+    await db.scenarios.clear();
+    await db.workItems.clear();
+    await db.allocations.clear();
+    await db.timeOffs.clear();
+
+    // Re-initialize will re-seed from scratch
+    set({
+      pods: [],
+      people: [],
+      scenarios: [],
+      workItems: [],
+      allocations: [],
+      timeOffs: [],
+      currentScenarioId: 'scenario-base',
+      currentScreen: 'roster',
+      podFilterIds: [],
+      editMode: false,
+      selectedCells: new Set<string>(),
+      dayDrawerOpen: false,
+      selectedCellInfo: null,
+      personDrawerOpen: false,
+      selectedPersonId: null,
+    });
+
+    await get().initialize();
   },
 }));

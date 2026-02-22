@@ -178,7 +178,7 @@ export function PeopleScreen() {
   };
 
   return (
-    <div className="people-screen">
+    <div className={`people-screen ${isEditor && selectedCount > 0 ? 'people-screen--has-selection' : ''}`}>
       <div className="people-header">
         <div>
           <h2>People</h2>

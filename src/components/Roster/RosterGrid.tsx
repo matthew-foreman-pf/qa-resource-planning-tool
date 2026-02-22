@@ -102,6 +102,8 @@ export function RosterGrid() {
     return podGroups.filter((g) => {
       // Always show QA lead group
       if (g.pods.some((sg) => sg.pod.id === '__qa_lead__')) return true;
+      // Always show Unassigned group so no-homePod people stay visible
+      if (g.pods.some((sg) => sg.pod.id === '__unassigned__')) return true;
       // Show group if any of its pods match the filter
       return g.pods.some((sg) => podFilterIds.includes(sg.pod.id));
     });

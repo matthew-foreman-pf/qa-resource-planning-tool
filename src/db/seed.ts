@@ -20,6 +20,7 @@ export const seedPods: Pod[] = [
   { id: 'pod-tp', name: 'TINPOZ' },
   { id: 'pod-ss', name: 'ServerScapes' },
   { id: 'pod-la', name: 'Lalo' },
+  { id: 'pod-qa', name: 'QA Pool' },
 ];
 
 const podPrefixes: Record<string, string> = {
@@ -28,6 +29,7 @@ const podPrefixes: Record<string, string> = {
   'pod-tp': 'TP',
   'pod-ss': 'SS',
   'pod-la': 'LA',
+  'pod-qa': 'QA',
 };
 
 // ---- People ----
@@ -87,7 +89,33 @@ export const seedPeople: Person[] = [
   },
 ];
 
-// 27 vendor testers
+// Vendor-to-pod mapping based on their allocations
+const vendorHomePods: Record<number, string> = {
+  // Vendors 01-04: SS Login Migration → ServerScapes
+  1: 'pod-ss', 2: 'pod-ss', 3: 'pod-ss', 4: 'pod-ss',
+  // Vendors 05-06: SS Database Sharding → ServerScapes
+  5: 'pod-ss', 6: 'pod-ss',
+  // Vendors 07-08: SS API Gateway → ServerScapes
+  7: 'pod-ss', 8: 'pod-ss',
+  // Vendor 09: SS Load Testing → ServerScapes
+  9: 'pod-ss',
+  // Vendors 10-12: PS Dashboard → Pod Squad
+  10: 'pod-ps', 11: 'pod-ps', 12: 'pod-ps',
+  // Vendors 13-14: PS User Profile → Pod Squad
+  13: 'pod-ps', 14: 'pod-ps',
+  // Vendors 15-16: TP Notification → TINPOZ
+  15: 'pod-tp', 16: 'pod-tp',
+  // Vendor 17: TP Push Integration → TINPOZ
+  17: 'pod-tp',
+  // Vendors 18-20: WW Spell Check → Word Wizards
+  18: 'pod-ww', 19: 'pod-ww', 20: 'pod-ww',
+  // Vendors 21-22: LA Payment Flow → Lalo
+  21: 'pod-la', 22: 'pod-la',
+  // Vendor 23: LA Fraud Detection → Lalo
+  23: 'pod-la',
+};
+
+// 27 vendor testers with home pods matching their allocations
 for (let i = 1; i <= 27; i++) {
   const num = String(i).padStart(2, '0');
   const person: Person = {
@@ -99,7 +127,12 @@ for (let i = 1; i <= 27; i++) {
     status: 'active',
   };
 
-  // Vendors 24-25: no home pod, assigned to Emily as lead
+  // Assign home pod based on allocation mapping
+  if (vendorHomePods[i]) {
+    person.homePodId = vendorHomePods[i];
+  }
+
+  // Vendors 24-25: context switchers — spread across many pods, assigned to Emily
   if (i === 24 || i === 25) {
     person.leadId = 'person-emily';
     // no homePodId — these are "floating" testers under Emily
@@ -109,6 +142,22 @@ for (let i = 1; i <= 27; i++) {
   // (no extra fields needed — just no homePodId and no leadId)
 
   seedPeople.push(person);
+}
+
+// 3 additional vendor testers with no homePodId, under Emily's lead
+// These demonstrate that people without a home pod can still be assigned to features
+for (let i = 28; i <= 30; i++) {
+  const num = String(i).padStart(2, '0');
+  seedPeople.push({
+    id: `person-vendor-${num}`,
+    name: `Vendor QA ${num}`,
+    role: 'tester',
+    type: 'vendor',
+    weeklyCapacityDays: 5,
+    status: 'active',
+    leadId: 'person-emily',
+    // no homePodId — floating testers under Emily
+  });
 }
 
 // ---- Work Items ----
@@ -256,6 +305,27 @@ export function generateSeedWorkItems(): WorkItem[] {
       podId: 'pod-la',
       startDate: toDateStr(addWeeks(ws, 3)),
       endDate: toDateStr(addWeeks(ws, 11)),
+      requiredMinDaysPerWeek: 2,
+    },
+
+    // QA Pool (central tasks under QA Lead)
+    {
+      id: 'wi-qa-1',
+      type: 'initiative',
+      name: 'Regression Suite Maintenance',
+      podId: 'pod-qa',
+      startDate: toDateStr(ws),
+      endDate: toDateStr(addWeeks(ws, 11)),
+      requiredMinDaysPerWeek: 3,
+      notes: 'Cross-pod regression testing owned by QA Lead',
+    },
+    {
+      id: 'wi-qa-2',
+      type: 'feature',
+      name: 'Test Automation Framework',
+      podId: 'pod-qa',
+      startDate: toDateStr(addWeeks(ws, 2)),
+      endDate: toDateStr(addWeeks(ws, 9)),
       requiredMinDaysPerWeek: 2,
     },
   ];
@@ -563,8 +633,60 @@ export function generateSeedAllocations(workItems: WorkItem[]): Allocation[] {
     }
   }
 
+  // Vendors 28-30: Emily's floating testers — assigned to central QA tasks + cross-pod work
+  // Vendor 28: QA Regression Suite Maintenance (central QA task)
+  {
+    const vid = 'person-vendor-28';
+    const days = getWIDays(wiMap['wi-qa-1']);
+    let count = 0;
+    for (const d of days) {
+      if (count % 5 < 3) addAlloc(vid, 'wi-qa-1', d);
+      count++;
+    }
+  }
+
+  // Vendor 29: Split between QA Regression Suite + PS Accessibility Audit
+  {
+    const vid = 'person-vendor-29';
+    const days = getWIDays(wiMap['wi-qa-1']);
+    let count = 0;
+    for (const d of days) {
+      if (count % 5 < 2) addAlloc(vid, 'wi-qa-1', d);
+      count++;
+    }
+  }
+  {
+    const vid = 'person-vendor-29';
+    const days = getWIDays(wiMap['wi-ps-3']);
+    let count = 0;
+    for (const d of days) {
+      if (count % 5 >= 2 && count % 5 < 4) addAlloc(vid, 'wi-ps-3', d);
+      count++;
+    }
+  }
+
+  // Vendor 30: QA Test Automation Framework + LA Fraud Detection
+  {
+    const vid = 'person-vendor-30';
+    const days = getWIDays(wiMap['wi-qa-2']);
+    let count = 0;
+    for (const d of days) {
+      if (count % 5 < 2) addAlloc(vid, 'wi-qa-2', d);
+      count++;
+    }
+  }
+  {
+    const vid = 'person-vendor-30';
+    const days = getWIDays(wiMap['wi-la-2']);
+    let count = 0;
+    for (const d of days) {
+      if (count % 5 >= 2 && count % 5 < 4) addAlloc(vid, 'wi-la-2', d);
+      count++;
+    }
+  }
+
   // Intentionally leave WW Grammar Engine v2 and PS Accessibility Audit under-staffed
-  // (no vendor allocations) to create coverage risk
+  // (vendor 28 and 29 help but not enough) to create coverage risk
 
   return allocations;
 }

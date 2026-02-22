@@ -173,6 +173,32 @@ body {
   border-bottom-color: var(--accent-light);
 }
 
+/* Settings cog button (right side of nav) */
+.nav-settings-btn {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.nav-settings-btn:hover {
+  color: var(--text-bright);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.nav-settings-btn--active {
+  color: var(--accent-light);
+  background: rgba(255, 255, 255, 0.08);
+}
+
 /* ---- Toolbar (Scenario Selector) ---- */
 .toolbar {
   background: var(--surface);
@@ -1321,6 +1347,33 @@ h4 {
   color: var(--risk-green);
 }
 
+.people-picker-filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.people-picker-lead-filter {
+  max-width: 180px;
+  font-size: 12px;
+}
+
+.people-picker-search {
+  flex: 1;
+  min-width: 120px;
+  font-size: 12px;
+}
+
+.people-picker-empty {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 12px;
+  grid-column: 1 / -1;
+  padding: 4px 0;
+}
+
 .people-checkboxes {
   max-height: 200px;
   overflow-y: auto;
@@ -1328,7 +1381,7 @@ h4 {
   border-radius: var(--radius);
   padding: 8px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 2px;
   background: var(--surface-raised);
 }
@@ -1341,6 +1394,10 @@ h4 {
   padding: 2px 0;
   cursor: pointer;
   color: var(--text);
+}
+
+.checkbox-label--no-pod {
+  color: var(--text-muted);
 }
 
 .checkbox-label input[type='checkbox'] {
@@ -1943,6 +2000,10 @@ input[type='date']::-webkit-calendar-picker-indicator {
   max-width: 1100px;
 }
 
+.people-screen--has-selection {
+  padding-bottom: 80px;
+}
+
 .people-header {
   display: flex;
   align-items: flex-start;
@@ -2363,4 +2424,69 @@ input[type='date']::-webkit-calendar-picker-indicator {
   color: #e0a040;
   border: 1px solid #6b5a30;
   letter-spacing: 0.2px;
+}
+
+/* ============================================
+   SETTINGS SCREEN
+   ============================================ */
+
+.settings-screen {
+  max-width: 640px;
+}
+
+.settings-section {
+  margin-top: 24px;
+}
+
+.settings-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 12px;
+}
+
+.settings-card {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.settings-card-info h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 6px;
+}
+
+.settings-card-info p {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.settings-card-action {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-confirm {
+  background: rgba(200, 60, 60, 0.08);
+  border: 1px solid rgba(200, 60, 60, 0.25);
+  border-radius: 6px;
+  padding: 14px;
+}
+
+.settings-confirm-msg {
+  font-size: 13px;
+  color: #e06060;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.settings-confirm-actions {
+  display: flex;
+  gap: 8px;
 }

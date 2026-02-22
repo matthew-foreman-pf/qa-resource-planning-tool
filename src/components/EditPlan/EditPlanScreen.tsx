@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useStore } from '../../store';
 import { getWeekdaysInRangeStr, toDateStr, today } from '../../utils/dates';
 import { getWorkItemLabel } from '../../utils/helpers';
 import { addWeeks } from 'date-fns';
-import type { Allocation } from '../../types';
+import type { Allocation, Person } from '../../types';
 
 export function EditPlanScreen() {
   return (
@@ -102,22 +102,11 @@ function BulkAssignmentForm() {
         </select>
       </div>
 
-      <div className="form-group">
-        <label>People (multi-select)</label>
-        <div className="people-checkboxes">
-          {people.map((p) => (
-            <label key={p.id} className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={selectedPeople.includes(p.id)}
-                onChange={() => togglePerson(p.id)}
-              />
-              {p.name}
-              {p.type === 'vendor' ? ' (V)' : ''}
-            </label>
-          ))}
-        </div>
-      </div>
+      <PeopleCheckboxPicker
+        people={people}
+        selectedPeople={selectedPeople}
+        onToggle={togglePerson}
+      />
 
       <div className="form-row">
         <div className="form-group">
@@ -310,22 +299,11 @@ function BulkUnassignForm() {
 
       {/* Scope-specific inputs */}
       {scope === 'people' && (
-        <div className="form-group">
-          <label>People (multi-select)</label>
-          <div className="people-checkboxes">
-            {people.filter((p) => p.status === 'active').map((p) => (
-              <label key={p.id} className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={selectedPeople.includes(p.id)}
-                  onChange={() => togglePerson(p.id)}
-                />
-                {p.name}
-                {p.type === 'vendor' ? ' (V)' : ''}
-              </label>
-            ))}
-          </div>
-        </div>
+        <PeopleCheckboxPicker
+          people={people}
+          selectedPeople={selectedPeople}
+          onToggle={togglePerson}
+        />
       )}
 
       {scope === 'workItem' && (
@@ -653,22 +631,11 @@ function BulkReassignForm() {
 
       {/* Scope-specific inputs */}
       {scope === 'people' && (
-        <div className="form-group">
-          <label>People (multi-select)</label>
-          <div className="people-checkboxes">
-            {people.filter((p) => p.status === 'active').map((p) => (
-              <label key={p.id} className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={selectedPeople.includes(p.id)}
-                  onChange={() => togglePerson(p.id)}
-                />
-                {p.name}
-                {p.type === 'vendor' ? ' (V)' : ''}
-              </label>
-            ))}
-          </div>
-        </div>
+        <PeopleCheckboxPicker
+          people={people}
+          selectedPeople={selectedPeople}
+          onToggle={togglePerson}
+        />
       )}
 
       {scope === 'workItem' && (
@@ -834,6 +801,117 @@ function BulkReassignForm() {
 
       {message && <div className="form-message">{message}</div>}
     </section>
+  );
+}
+
+/* ============================================
+   PEOPLE CHECKBOX PICKER (reusable)
+   ============================================ */
+
+function PeopleCheckboxPicker({
+  people,
+  selectedPeople,
+  onToggle,
+  filterActive,
+}: {
+  people: Person[];
+  selectedPeople: string[];
+  onToggle: (personId: string) => void;
+  filterActive?: boolean;
+}) {
+  const [leadFilter, setLeadFilter] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Build lead options from people who are qa_lead or pod_lead
+  const leadOptions = useMemo(() => {
+    return people.filter((p) => p.role === 'qa_lead' || p.role === 'pod_lead');
+  }, [people]);
+
+  // Filter people list
+  const filteredPeople = useMemo(() => {
+    let list = filterActive !== false ? people.filter((p) => p.status === 'active') : people;
+
+    if (leadFilter === '__none__') {
+      list = list.filter((p) => !p.leadId && p.role === 'tester');
+    } else if (leadFilter) {
+      list = list.filter((p) => p.leadId === leadFilter || p.id === leadFilter);
+    }
+
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      list = list.filter((p) => p.name.toLowerCase().includes(q));
+    }
+
+    return list;
+  }, [people, filterActive, leadFilter, searchTerm]);
+
+  // Select / deselect all visible
+  const allVisibleSelected = filteredPeople.length > 0 && filteredPeople.every((p) => selectedPeople.includes(p.id));
+  const handleSelectAll = useCallback(() => {
+    if (allVisibleSelected) {
+      // Deselect all visible
+      const visibleIds = new Set(filteredPeople.map((p) => p.id));
+      for (const id of visibleIds) {
+        if (selectedPeople.includes(id)) onToggle(id);
+      }
+    } else {
+      // Select all visible
+      for (const p of filteredPeople) {
+        if (!selectedPeople.includes(p.id)) onToggle(p.id);
+      }
+    }
+  }, [filteredPeople, selectedPeople, allVisibleSelected, onToggle]);
+
+  return (
+    <div className="form-group">
+      <label>People (multi-select)</label>
+      <div className="people-picker-filters">
+        <select
+          value={leadFilter}
+          onChange={(e) => setLeadFilter(e.target.value)}
+          className="people-picker-lead-filter"
+        >
+          <option value="">All leads</option>
+          {leadOptions.map((lead) => (
+            <option key={lead.id} value={lead.id}>
+              Lead: {lead.name}
+            </option>
+          ))}
+          <option value="__none__">No lead assigned</option>
+        </select>
+        <input
+          type="text"
+          placeholder="Search by name..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="people-picker-search"
+        />
+        <button
+          type="button"
+          className="btn btn--sm"
+          onClick={handleSelectAll}
+        >
+          {allVisibleSelected ? 'Deselect All' : 'Select All'}
+        </button>
+      </div>
+      <div className="people-checkboxes">
+        {filteredPeople.map((p) => (
+          <label key={p.id} className={`checkbox-label ${!p.homePodId ? 'checkbox-label--no-pod' : ''}`}>
+            <input
+              type="checkbox"
+              checked={selectedPeople.includes(p.id)}
+              onChange={() => onToggle(p.id)}
+            />
+            {p.name}
+            {p.type === 'vendor' ? ' (V)' : ''}
+            {!p.homePodId && p.role === 'tester' ? ' [No Pod]' : ''}
+          </label>
+        ))}
+        {filteredPeople.length === 0 && (
+          <span className="people-picker-empty">No people match filters</span>
+        )}
+      </div>
+    </div>
   );
 }
 

@@ -735,3 +735,14 @@ export const basePlanScenario: Scenario = {
 
 /** Fixed realm ID for the shared team planning data (Dexie Cloud) */
 export const TEAM_REALM_ID = 'rlm-team-planning';
+
+/** Team member emails to auto-invite to the shared realm */
+export const TEAM_EMAILS = [
+  'emily.mccormick@peoplefun.com',
+  'peter.yiap@peoplefun.com',
+  'adam.brzozowski@peoplefun.com',
+  'casey.takesue@peoplefun.com',
+  'daniella.eguiguren@peoplefun.com',
+  'nichole.strano@peoplefun.com',
+  'alec.bautista@peoplefun.com',
+];

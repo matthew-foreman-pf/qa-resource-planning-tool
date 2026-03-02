@@ -17,6 +17,7 @@ import {
   generateSeedTimeOffs,
   basePlanScenario,
   TEAM_REALM_ID,
+  TEAM_EMAILS,
 } from '../db/seed';
 import { toDateStr, today, getWeekdaysInRangeStr, getWeekStart } from '../utils/dates';
 
@@ -220,19 +221,28 @@ export const useStore = create<AppState>((set, get) => ({
           timeOffs.map((to) => ({ ...to, scenarioId: 'scenario-base', ...cp }))
         );
       } else if (existingRealm) {
-        // Realm exists (synced from cloud) — auto-join if not already a member
-        const currentUserId = db.cloud.currentUserId;
+        // Realm owner: auto-invite team members who aren't yet invited
         const members = await db.table('members').toArray();
-        const isMember = members.some(
-          (m: any) => m.realmId === TEAM_REALM_ID && m.userId === currentUserId
+        const invitedEmails = new Set(
+          members
+            .filter((m: any) => m.realmId === TEAM_REALM_ID)
+            .map((m: any) => m.email?.toLowerCase())
+            .filter(Boolean)
         );
-        if (!isMember) {
-          await db.table('members').add({
-            realmId: TEAM_REALM_ID,
-            userId: currentUserId,
-            roles: ['editor'],
-            accepted: new Date(),
-          });
+        const missingEmails = TEAM_EMAILS.filter(
+          (e) => !invitedEmails.has(e.toLowerCase())
+        );
+        for (const email of missingEmails) {
+          try {
+            await db.table('members').add({
+              realmId: TEAM_REALM_ID,
+              email,
+              invite: true,
+              roles: ['editor'],
+            });
+          } catch {
+            // ignore duplicates
+          }
         }
       }
     } else {

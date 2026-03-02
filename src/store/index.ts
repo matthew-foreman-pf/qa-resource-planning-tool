@@ -219,8 +219,22 @@ export const useStore = create<AppState>((set, get) => ({
         await db.timeOffs.bulkPut(
           timeOffs.map((to) => ({ ...to, scenarioId: 'scenario-base', ...cp }))
         );
+      } else if (existingRealm) {
+        // Realm exists (synced from cloud) — auto-join if not already a member
+        const currentUserId = db.cloud.currentUserId;
+        const members = await db.table('members').toArray();
+        const isMember = members.some(
+          (m: any) => m.realmId === TEAM_REALM_ID && m.userId === currentUserId
+        );
+        if (!isMember) {
+          await db.table('members').add({
+            realmId: TEAM_REALM_ID,
+            userId: currentUserId,
+            roles: ['editor'],
+            accepted: new Date(),
+          });
+        }
       }
-      // If realm exists or data already present, data syncs from cloud
     } else {
       // Local-only mode: seed exactly as before
       const scenarioCount = await db.scenarios.count();

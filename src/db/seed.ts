@@ -6,12 +6,6 @@ import type {
   TimeOff,
   Scenario,
 } from '../types';
-import { addWeeks, addDays, format } from 'date-fns';
-import { today, toDateStr, getWeekdaysInRange, getWeekStart } from '../utils/dates';
-
-function makeId(): string {
-  return crypto.randomUUID();
-}
 
 // ---- Pods ----
 export const seedPods: Pod[] = [
@@ -23,24 +17,15 @@ export const seedPods: Pod[] = [
   { id: 'pod-qa', name: 'QA Pool' },
 ];
 
-const podPrefixes: Record<string, string> = {
-  'pod-ww': 'WW',
-  'pod-ps': 'PS',
-  'pod-tp': 'TP',
-  'pod-ss': 'SS',
-  'pod-la': 'LA',
-  'pod-qa': 'QA',
-};
-
 // ---- People ----
 export const seedPeople: Person[] = [
+  // Internal leads
   {
     id: 'person-emily',
     name: 'Emily',
     role: 'qa_lead',
     type: 'internal',
     weeklyCapacityDays: 5,
-
     status: 'active',
   },
   {
@@ -50,7 +35,6 @@ export const seedPeople: Person[] = [
     homePodId: 'pod-ps',
     type: 'internal',
     weeklyCapacityDays: 5,
-
     status: 'active',
     defaultPodFilterIds: ['pod-ps'],
   },
@@ -61,7 +45,6 @@ export const seedPeople: Person[] = [
     homePodId: 'pod-la',
     type: 'internal',
     weeklyCapacityDays: 5,
-
     status: 'active',
     defaultPodFilterIds: ['pod-la'],
   },
@@ -72,7 +55,6 @@ export const seedPeople: Person[] = [
     homePodId: 'pod-tp',
     type: 'internal',
     weeklyCapacityDays: 5,
-
     status: 'active',
     defaultPodFilterIds: ['pod-tp', 'pod-ss'],
   },
@@ -83,648 +65,559 @@ export const seedPeople: Person[] = [
     homePodId: 'pod-ww',
     type: 'internal',
     weeklyCapacityDays: 5,
-
     status: 'active',
     defaultPodFilterIds: ['pod-ww'],
   },
+
+  // ---- LALO pod vendors ----
+  { id: 'person-thanush', name: 'Thanush', role: 'tester', homePodId: 'pod-la', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-lionel' },
+  { id: 'person-ajith', name: 'Ajith', role: 'tester', homePodId: 'pod-la', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-lionel' },
+  { id: 'person-madiki-uday', name: 'Madiki Uday', role: 'tester', homePodId: 'pod-la', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-lionel' },
+  { id: 'person-lokeswar-reddy', name: 'Lokeswar Reddy', role: 'tester', homePodId: 'pod-la', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-lionel' },
+  { id: 'person-manikanta', name: 'Manikanta Varma Datla', role: 'tester', homePodId: 'pod-la', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-lionel' },
+  { id: 'person-akhila', name: 'Akhila M S', role: 'tester', homePodId: 'pod-la', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-lionel' },
+  { id: 'person-vishweshwar', name: 'Vishweshwar R', role: 'tester', homePodId: 'pod-la', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-lionel' },
+
+  // ---- Word Wizards pod vendors ----
+  { id: 'person-ram-prasath', name: 'Ram Prasath S', role: 'tester', homePodId: 'pod-ww', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-tbh' },
+  { id: 'person-sabarinathan', name: 'Sabarinathan', role: 'tester', homePodId: 'pod-ww', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-tbh' },
+  { id: 'person-abhishek', name: 'Abhishek R', role: 'tester', homePodId: 'pod-ww', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-tbh' },
+  { id: 'person-siranjeevi', name: 'Siranjeevi', role: 'tester', homePodId: 'pod-ww', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-tbh' },
+  { id: 'person-mukesh', name: 'Mukesh M', role: 'tester', homePodId: 'pod-ww', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-tbh' },
+
+  // ---- Pod Squad pod vendors ----
+  { id: 'person-shreekantacharya', name: 'Shreekantacharya', role: 'tester', homePodId: 'pod-ps', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-izzy' },
+  { id: 'person-jayanth', name: 'Jayanth R', role: 'tester', homePodId: 'pod-ps', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-izzy' },
+  { id: 'person-gagan', name: 'Gagan B L', role: 'tester', homePodId: 'pod-ps', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-izzy' },
+  { id: 'person-sudeep', name: 'Sudeep M', role: 'tester', homePodId: 'pod-ps', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-izzy' },
+  { id: 'person-gowtham', name: 'Gowtham', role: 'tester', homePodId: 'pod-ps', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-izzy' },
+
+  // ---- TINPOZ pod vendors ----
+  { id: 'person-mithun', name: 'Mithun', role: 'tester', homePodId: 'pod-tp', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-kawika' },
+  { id: 'person-sai-ram', name: 'Sai Ram', role: 'tester', homePodId: 'pod-tp', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-kawika' },
+  { id: 'person-sathish', name: 'Sathish V', role: 'tester', homePodId: 'pod-tp', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-kawika' },
+  { id: 'person-momin', name: 'Momin', role: 'tester', homePodId: 'pod-tp', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-kawika' },
+  { id: 'person-srivalli', name: 'Srivalli', role: 'tester', homePodId: 'pod-tp', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-kawika' },
+  { id: 'person-shiva-kiran', name: 'Shiva Kiran', role: 'tester', homePodId: 'pod-tp', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-kawika' },
+  { id: 'person-srujan', name: 'Srujan', role: 'tester', homePodId: 'pod-tp', type: 'vendor', weeklyCapacityDays: 5, status: 'active', leadId: 'person-kawika' },
 ];
 
-// Vendor-to-pod mapping based on their allocations
-const vendorHomePods: Record<number, string> = {
-  // Vendors 01-04: SS Login Migration → ServerScapes
-  1: 'pod-ss', 2: 'pod-ss', 3: 'pod-ss', 4: 'pod-ss',
-  // Vendors 05-06: SS Database Sharding → ServerScapes
-  5: 'pod-ss', 6: 'pod-ss',
-  // Vendors 07-08: SS API Gateway → ServerScapes
-  7: 'pod-ss', 8: 'pod-ss',
-  // Vendor 09: SS Load Testing → ServerScapes
-  9: 'pod-ss',
-  // Vendors 10-12: PS Dashboard → Pod Squad
-  10: 'pod-ps', 11: 'pod-ps', 12: 'pod-ps',
-  // Vendors 13-14: PS User Profile → Pod Squad
-  13: 'pod-ps', 14: 'pod-ps',
-  // Vendors 15-16: TP Notification → TINPOZ
-  15: 'pod-tp', 16: 'pod-tp',
-  // Vendor 17: TP Push Integration → TINPOZ
-  17: 'pod-tp',
-  // Vendors 18-20: WW Spell Check → Word Wizards
-  18: 'pod-ww', 19: 'pod-ww', 20: 'pod-ww',
-  // Vendors 21-22: LA Payment Flow → Lalo
-  21: 'pod-la', 22: 'pod-la',
-  // Vendor 23: LA Fraud Detection → Lalo
-  23: 'pod-la',
-};
-
-// 27 vendor testers with home pods matching their allocations
-for (let i = 1; i <= 27; i++) {
-  const num = String(i).padStart(2, '0');
-  const person: Person = {
-    id: `person-vendor-${num}`,
-    name: `Vendor QA ${num}`,
-    role: 'tester',
-    type: 'vendor',
-    weeklyCapacityDays: 5,
-    status: 'active',
-  };
-
-  // Assign home pod based on allocation mapping
-  if (vendorHomePods[i]) {
-    person.homePodId = vendorHomePods[i];
-  }
-
-  // Vendors 24-25: context switchers — spread across many pods, assigned to Emily
-  if (i === 24 || i === 25) {
-    person.leadId = 'person-emily';
-    // no homePodId — these are "floating" testers under Emily
-  }
-
-  // Vendors 26-27: no home pod, no lead — will appear in "Unassigned (Needs Owner)"
-  // (no extra fields needed — just no homePodId and no leadId)
-
-  seedPeople.push(person);
-}
-
-// 3 additional vendor testers with no homePodId, under Emily's lead
-// These demonstrate that people without a home pod can still be assigned to features
-for (let i = 28; i <= 30; i++) {
-  const num = String(i).padStart(2, '0');
-  seedPeople.push({
-    id: `person-vendor-${num}`,
-    name: `Vendor QA ${num}`,
-    role: 'tester',
-    type: 'vendor',
-    weeklyCapacityDays: 5,
-    status: 'active',
-    leadId: 'person-emily',
-    // no homePodId — floating testers under Emily
-  });
-}
-
 // ---- Work Items ----
-const t = today();
-const ws = getWeekStart(t);
+// Based on Wordscapes Release Overview spreadsheet
+// Jira base URL: https://peoplefun.atlassian.net/browse/
 
 export function generateSeedWorkItems(): WorkItem[] {
   return [
-    // Word Wizards (3 items)
+    // ============================================================
+    // 3.10 Release (3/18 → 3/23) — Regression: 3/9-3/23
+    // ============================================================
+
+    // Major features
     {
-      id: 'wi-ww-1',
+      id: 'wi-310-curated-ftue',
       type: 'feature',
-      name: 'Spell Check Overhaul',
-      podId: 'pod-ww',
-      startDate: toDateStr(ws),
-      endDate: toDateStr(addWeeks(ws, 6)),
+      name: 'Daily Puzzle: Curated FTUE',
+      podId: 'pod-ps',
+      startDate: '2026-01-23',
+      endDate: '2026-03-23',
       requiredMinDaysPerWeek: 3,
+      releaseDate: '2026-03-23',
+      jiraKey: 'WSU-33450',
+      notes: '3.10 Release — Major feature. Producer: Daniella.',
     },
     {
-      id: 'wi-ww-2',
+      id: 'wi-310-remote-content',
       type: 'feature',
-      name: 'Grammar Engine v2',
+      name: 'Remote Content Delivery',
       podId: 'pod-ww',
-      startDate: toDateStr(addWeeks(ws, 4)),
-      endDate: toDateStr(addWeeks(ws, 10)),
-      requiredMinDaysPerWeek: 2,
-    },
-    {
-      id: 'wi-ww-3',
-      type: 'initiative',
-      name: 'Localization Testing',
-      podId: 'pod-ww',
-      startDate: toDateStr(addWeeks(ws, 1)),
-      endDate: toDateStr(addWeeks(ws, 8)),
-      requiredMinDaysPerWeek: 2,
-      notes: 'Covers 12 languages',
+      startDate: '2026-02-02',
+      endDate: '2026-03-23',
+      requiredMinDaysPerWeek: 3,
+      releaseDate: '2026-03-23',
+      notes: '3.10 Release — Major feature. Producer: Matt.',
     },
 
-    // Pod Squad (3 items)
+    // Minor features
     {
-      id: 'wi-ps-1',
+      id: 'wi-310-ui-consistency',
       type: 'feature',
-      name: 'Dashboard Redesign',
+      name: 'UI Consistency Pass: Mt Fortune',
       podId: 'pod-ps',
-      startDate: toDateStr(ws),
-      endDate: toDateStr(addWeeks(ws, 5)),
-      requiredMinDaysPerWeek: 4,
-      releaseDate: toDateStr(addWeeks(ws, 5)),
-    },
-    {
-      id: 'wi-ps-2',
-      type: 'feature',
-      name: 'User Profile Revamp',
-      podId: 'pod-ps',
-      startDate: toDateStr(addWeeks(ws, 3)),
-      endDate: toDateStr(addWeeks(ws, 9)),
+      startDate: '2026-01-28',
+      endDate: '2026-03-23',
       requiredMinDaysPerWeek: 2,
+      releaseDate: '2026-03-23',
+      jiraKey: 'WSU-33606',
+      notes: '3.10 Release — Minor feature. Producer: Daniella.',
     },
     {
-      id: 'wi-ps-3',
-      type: 'initiative',
-      name: 'Accessibility Audit',
-      podId: 'pod-ps',
-      startDate: toDateStr(addWeeks(ws, 6)),
-      endDate: toDateStr(addWeeks(ws, 11)),
-      requiredMinDaysPerWeek: 3,
-    },
-
-    // TINPOZ (2 items)
-    {
-      id: 'wi-tp-1',
+      id: 'wi-310-help-request-overhaul',
       type: 'feature',
-      name: 'Notification System',
+      name: '[Chat Improvements] Help Request Overhaul',
       podId: 'pod-tp',
-      startDate: toDateStr(ws),
-      endDate: toDateStr(addWeeks(ws, 7)),
+      startDate: '2026-01-30',
+      endDate: '2026-03-23',
       requiredMinDaysPerWeek: 3,
+      releaseDate: '2026-03-23',
+      jiraKey: 'WSU-34670',
+      notes: '3.10 Release — Minor feature. Producer: Matt.',
     },
     {
-      id: 'wi-tp-2',
+      id: 'wi-310-chronicle-announcements',
       type: 'feature',
-      name: 'Push Integration',
+      name: 'Chronicle Support for Announcements',
       podId: 'pod-tp',
-      startDate: toDateStr(addWeeks(ws, 5)),
-      endDate: toDateStr(addWeeks(ws, 11)),
+      startDate: '2026-01-26',
+      endDate: '2026-03-23',
       requiredMinDaysPerWeek: 2,
+      releaseDate: '2026-03-23',
+      jiraKey: 'WSU-35411',
+      notes: '3.10 Release — Minor feature. Producer: Matt.',
     },
-
-    // ServerScapes (4 items - intentionally overlapping for risk)
     {
-      id: 'wi-ss-1',
+      id: 'wi-310-chronicle-offers',
       type: 'feature',
-      name: 'Login Migration',
-      podId: 'pod-ss',
-      startDate: toDateStr(ws),
-      endDate: toDateStr(addWeeks(ws, 4)),
-      requiredMinDaysPerWeek: 5,
-      releaseDate: toDateStr(addWeeks(ws, 4)),
-      notes: 'Critical path - high priority',
-    },
-    {
-      id: 'wi-ss-2',
-      type: 'feature',
-      name: 'API Gateway Upgrade',
-      podId: 'pod-ss',
-      startDate: toDateStr(addWeeks(ws, 1)),
-      endDate: toDateStr(addWeeks(ws, 8)),
-      requiredMinDaysPerWeek: 3,
-    },
-    {
-      id: 'wi-ss-3',
-      type: 'initiative',
-      name: 'Load Testing Suite',
-      podId: 'pod-ss',
-      startDate: toDateStr(addWeeks(ws, 2)),
-      endDate: toDateStr(addWeeks(ws, 10)),
-      requiredMinDaysPerWeek: 2,
-    },
-    {
-      id: 'wi-ss-4',
-      type: 'feature',
-      name: 'Database Sharding QA',
-      podId: 'pod-ss',
-      startDate: toDateStr(ws),
-      endDate: toDateStr(addWeeks(ws, 6)),
-      requiredMinDaysPerWeek: 3,
-      notes: 'Overlaps with Login Migration',
-    },
-
-    // Lalo (2 items)
-    {
-      id: 'wi-la-1',
-      type: 'feature',
-      name: 'Payment Flow v3',
+      name: 'Chronicle Support for Offers',
       podId: 'pod-la',
-      startDate: toDateStr(ws),
-      endDate: toDateStr(addWeeks(ws, 8)),
-      requiredMinDaysPerWeek: 3,
-      releaseDate: toDateStr(addWeeks(ws, 9)),
-    },
-    {
-      id: 'wi-la-2',
-      type: 'initiative',
-      name: 'Fraud Detection Tests',
-      podId: 'pod-la',
-      startDate: toDateStr(addWeeks(ws, 3)),
-      endDate: toDateStr(addWeeks(ws, 11)),
+      startDate: '2026-02-17',
+      endDate: '2026-03-23',
       requiredMinDaysPerWeek: 2,
+      releaseDate: '2026-03-23',
+      jiraKey: 'WSU-36045',
+      notes: '3.10 Release — Minor feature. Producer: Casey.',
     },
 
-    // QA Pool (central tasks under QA Lead)
+    // Platform / SDK
     {
-      id: 'wi-qa-1',
+      id: 'wi-310-pt-core-ads',
       type: 'initiative',
-      name: 'Regression Suite Maintenance',
+      name: 'PT Core 3.0.0 & PT Ads 1.1.1 Updates',
       podId: 'pod-qa',
-      startDate: toDateStr(ws),
-      endDate: toDateStr(addWeeks(ws, 11)),
-      requiredMinDaysPerWeek: 3,
-      notes: 'Cross-pod regression testing owned by QA Lead',
+      startDate: '2026-02-13',
+      endDate: '2026-03-23',
+      requiredMinDaysPerWeek: 2,
+      releaseDate: '2026-03-23',
+      jiraKey: 'WSU-36066',
+      notes: '3.10 Release — Platform. Producer: Casey.',
     },
     {
-      id: 'wi-qa-2',
-      type: 'feature',
-      name: 'Test Automation Framework',
+      id: 'wi-310-helpshift-reports',
+      type: 'initiative',
+      name: 'Update Helpshift CS reports (ad network + CRID)',
       podId: 'pod-qa',
-      startDate: toDateStr(addWeeks(ws, 2)),
-      endDate: toDateStr(addWeeks(ws, 9)),
+      startDate: '2026-01-22',
+      endDate: '2026-03-23',
+      requiredMinDaysPerWeek: 1,
+      releaseDate: '2026-03-23',
+      jiraKey: 'WSU-31618',
+      notes: '3.10 Release — Platform. Producer: Casey.',
+    },
+    {
+      id: 'wi-310-adjust-sdk',
+      type: 'initiative',
+      name: 'Adjust SDK Update for 3.10.0',
+      podId: 'pod-qa',
+      startDate: '2026-01-21',
+      endDate: '2026-03-23',
+      requiredMinDaysPerWeek: 1,
+      releaseDate: '2026-03-23',
+      jiraKey: 'WSU-34770',
+      notes: '3.10 Release — SDK update. Producer: Casey.',
+    },
+
+    // ABTs
+    {
+      id: 'wi-310-fast-play-abt',
+      type: 'feature',
+      name: 'Fast Play ABT',
+      podId: 'pod-ww',
+      startDate: '2026-02-23',
+      endDate: '2026-03-23',
       requiredMinDaysPerWeek: 2,
+      releaseDate: '2026-03-23',
+      jiraKey: 'WSU-36196',
+      notes: '3.10 Release — ABT. Producer: Matt.',
+    },
+    {
+      id: 'wi-310-store-badging-abt',
+      type: 'feature',
+      name: 'LiveOps ABTs: Store badging audit',
+      podId: 'pod-la',
+      startDate: '2026-01-21',
+      endDate: '2026-03-23',
+      requiredMinDaysPerWeek: 2,
+      releaseDate: '2026-03-23',
+      jiraKey: 'WSU-32338',
+      notes: '3.10 Release — ABT. Producer: Casey.',
+    },
+    {
+      id: 'wi-310-mountain-climb-abt',
+      type: 'feature',
+      name: 'Mountain Climb Rewards ABT',
+      podId: 'pod-ps',
+      startDate: '2026-01-27',
+      endDate: '2026-03-23',
+      requiredMinDaysPerWeek: 2,
+      releaseDate: '2026-03-23',
+      jiraKey: 'WSU-33489',
+      notes: '3.10 Release — ABT. Producer: Casey.',
+    },
+
+    // Bug-fixing
+    {
+      id: 'wi-310-offer-group-type',
+      type: 'feature',
+      name: 'Create new offer group type for low priority announcements',
+      podId: 'pod-la',
+      startDate: '2026-02-27',
+      endDate: '2026-03-23',
+      requiredMinDaysPerWeek: 1,
+      releaseDate: '2026-03-23',
+      jiraKey: 'WSU-36687',
+      notes: '3.10 Release — Bug-fixing. Producer: Daniella.',
+    },
+
+    // LiveOps (3.10)
+    {
+      id: 'wi-310-easter-liveops',
+      type: 'feature',
+      name: 'Easter LiveOps (Mar 30)',
+      podId: 'pod-ww',
+      startDate: '2026-02-03',
+      endDate: '2026-03-23',
+      requiredMinDaysPerWeek: 2,
+      releaseDate: '2026-03-23',
+      notes: '3.10 Release — LiveOps. Event goes live Mar 30. Producer: Casey.',
+    },
+    {
+      id: 'wi-310-april-fools',
+      type: 'feature',
+      name: 'April Fools LiveOps (Apr 1)',
+      podId: 'pod-ps',
+      startDate: '2026-02-04',
+      endDate: '2026-03-23',
+      requiredMinDaysPerWeek: 2,
+      releaseDate: '2026-03-23',
+      notes: '3.10 Release — LiveOps. Event goes live Apr 1. Producer: Casey.',
+    },
+    {
+      id: 'wi-310-inflatable-man-pet',
+      type: 'feature',
+      name: 'Wacky Inflatable Man Engagement Pet (Apr 1)',
+      podId: 'pod-la',
+      startDate: '2026-02-12',
+      endDate: '2026-03-23',
+      requiredMinDaysPerWeek: 1,
+      releaseDate: '2026-03-23',
+      notes: '3.10 Release — LiveOps. Event goes live Apr 1. Producer: Casey.',
+    },
+    {
+      id: 'wi-310-q2-mt-fortune',
+      type: 'feature',
+      name: 'Q2 Mt. Fortune (Underwater) (Apr 1)',
+      podId: 'pod-tp',
+      startDate: '2026-02-12',
+      endDate: '2026-03-23',
+      requiredMinDaysPerWeek: 1,
+      releaseDate: '2026-03-23',
+      notes: '3.10 Release — LiveOps. Event goes live Apr 1. Producer: Casey.',
+    },
+    {
+      id: 'wi-310-earth-day',
+      type: 'feature',
+      name: 'Earth Day LiveOps (Apr 12)',
+      podId: 'pod-tp',
+      startDate: '2026-02-04',
+      endDate: '2026-03-23',
+      requiredMinDaysPerWeek: 1,
+      releaseDate: '2026-03-23',
+      notes: '3.10 Release — LiveOps. Event goes live Apr 12. Producer: Casey.',
+    },
+
+    // ============================================================
+    // 3.9.2 Release (TBD) — Hotfix
+    // ============================================================
+    {
+      id: 'wi-392-d2c-appcharge',
+      type: 'feature',
+      name: '[D2C][Shop][AppCharge] IAP rewards missing on hard close',
+      podId: 'pod-la',
+      startDate: '2026-03-03',
+      endDate: '2026-03-14',
+      requiredMinDaysPerWeek: 3,
+      jiraKey: 'WSU-37051',
+      notes: '3.9.2 Hotfix — Bug-fixing. Producer: Daniella.',
+    },
+
+    // ============================================================
+    // 3.11 Release (4/14) — Merge: 3/27, Code Freeze: 3/30
+    // ============================================================
+    {
+      id: 'wi-311-team-remove-revamp',
+      type: 'feature',
+      name: 'TeamRemove Revamp - Ghost players & redis cleanup',
+      podId: 'pod-ss',
+      startDate: '2026-03-16',
+      endDate: '2026-04-14',
+      requiredMinDaysPerWeek: 3,
+      releaseDate: '2026-04-14',
+      jiraKey: 'WSU-35850',
+      notes: '3.11 Release — Minor feature. In Dev. Producer: Matt.',
+    },
+    {
+      id: 'wi-311-tiered-no-ads-abt',
+      type: 'feature',
+      name: 'Tiered No Ads x New Players ABT',
+      podId: 'pod-la',
+      startDate: '2026-03-06',
+      endDate: '2026-04-14',
+      requiredMinDaysPerWeek: 2,
+      releaseDate: '2026-04-14',
+      notes: '3.11 Release — Minor feature. In Dev. Producer: Daniella.',
+    },
+    {
+      id: 'wi-311-chat-qol',
+      type: 'feature',
+      name: 'Chat QOL Fixes & Improvements - Join/Kick/Remove',
+      podId: 'pod-tp',
+      startDate: '2026-03-13',
+      endDate: '2026-04-14',
+      requiredMinDaysPerWeek: 2,
+      releaseDate: '2026-04-14',
+      jiraKey: 'WSU-35846',
+      notes: '3.11 Release — Minor feature. Pre-Pro. Producer: Matt.',
+    },
+    {
+      id: 'wi-311-att-opt-in',
+      type: 'feature',
+      name: 'ATT Opt-in Redesign',
+      podId: 'pod-ps',
+      startDate: '2026-03-11',
+      endDate: '2026-04-14',
+      requiredMinDaysPerWeek: 2,
+      releaseDate: '2026-04-14',
+      jiraKey: 'WSU-35048',
+      notes: '3.11 Release — Minor feature. In Dev. Producer: Matt.',
+    },
+    {
+      id: 'wi-311-daily-gift-theming',
+      type: 'feature',
+      name: 'Daily Gift Theming & Simplified Daily Gift Widget',
+      podId: 'pod-ww',
+      startDate: '2026-03-06',
+      endDate: '2026-04-14',
+      requiredMinDaysPerWeek: 2,
+      releaseDate: '2026-04-14',
+      jiraKey: 'WSU-32344',
+      notes: '3.11 Release — Minor feature. In Dev. Producer: Casey.',
+    },
+    {
+      id: 'wi-311-pt-core-ads',
+      type: 'initiative',
+      name: 'PT Core & PT Ads Updates for 3.11.0',
+      podId: 'pod-qa',
+      startDate: '2026-03-20',
+      endDate: '2026-04-14',
+      requiredMinDaysPerWeek: 2,
+      releaseDate: '2026-04-14',
+      jiraKey: 'WSU-36897',
+      notes: '3.11 Release — Platform. Pre-Pro. Producer: Casey.',
+    },
+    {
+      id: 'wi-311-mothers-day',
+      type: 'feature',
+      name: 'Mother\'s Day LiveOps (May 4)',
+      podId: 'pod-ps',
+      startDate: '2026-03-06',
+      endDate: '2026-04-14',
+      requiredMinDaysPerWeek: 2,
+      releaseDate: '2026-04-14',
+      notes: '3.11 Release — LiveOps. In QA. Producer: Casey.',
+    },
+    {
+      id: 'wi-311-picnic-day',
+      type: 'feature',
+      name: 'Picnic Day LiveOps (May 17)',
+      podId: 'pod-ww',
+      startDate: '2026-03-06',
+      endDate: '2026-04-14',
+      requiredMinDaysPerWeek: 1,
+      releaseDate: '2026-04-14',
+      notes: '3.11 Release — LiveOps. In QA. Producer: Casey.',
+    },
+    {
+      id: 'wi-311-summer-sand-castle',
+      type: 'feature',
+      name: '[Summer] Sand Castle Crowns (Jun 1)',
+      podId: 'pod-la',
+      startDate: '2026-03-05',
+      endDate: '2026-04-14',
+      requiredMinDaysPerWeek: 1,
+      releaseDate: '2026-04-14',
+      notes: '3.11 Release — LiveOps. In QA. Producer: Casey.',
+    },
+    {
+      id: 'wi-311-summer-daily-goals',
+      type: 'feature',
+      name: 'Summer 1-3 Daily Goals with Michael\'s Tooling (Jun 1)',
+      podId: 'pod-tp',
+      startDate: '2026-03-06',
+      endDate: '2026-04-14',
+      requiredMinDaysPerWeek: 1,
+      releaseDate: '2026-04-14',
+      notes: '3.11 Release — LiveOps. In QA. Producer: Casey.',
+    },
+
+    // ============================================================
+    // 3.12 Release (5/12) — Merge: 4/24, Code Freeze: 4/27
+    // ============================================================
+    {
+      id: 'wi-312-wildlife-levels',
+      type: 'feature',
+      name: 'Wildlife Level Expansion',
+      podId: 'pod-ww',
+      startDate: '2026-04-14',
+      endDate: '2026-05-12',
+      requiredMinDaysPerWeek: 3,
+      releaseDate: '2026-05-12',
+      notes: '3.12 Release — Major feature. In Dev. At risk. Producer: Casey.',
+    },
+    {
+      id: 'wi-312-pt-core-ads',
+      type: 'initiative',
+      name: 'PT Core and PT Ads Updates for 3.12.0',
+      podId: 'pod-qa',
+      startDate: '2026-04-20',
+      endDate: '2026-05-12',
+      requiredMinDaysPerWeek: 2,
+      releaseDate: '2026-05-12',
+      notes: '3.12 Release — Platform. Pre-Pro. Producer: Casey.',
+    },
+    {
+      id: 'wi-312-9th-wordscapes-day',
+      type: 'feature',
+      name: '9th Wordscapes Day LiveOps',
+      podId: 'pod-ps',
+      startDate: '2026-04-14',
+      endDate: '2026-05-12',
+      requiredMinDaysPerWeek: 1,
+      releaseDate: '2026-05-12',
+      notes: '3.12 Release — LiveOps. Pre-Pro. Producer: Casey.',
+    },
+    {
+      id: 'wi-312-cow-pet',
+      type: 'feature',
+      name: 'Cow Engagement Pet',
+      podId: 'pod-la',
+      startDate: '2026-04-14',
+      endDate: '2026-05-12',
+      requiredMinDaysPerWeek: 1,
+      releaseDate: '2026-05-12',
+      notes: '3.12 Release — LiveOps. Pre-Pro. Producer: Casey.',
+    },
+    {
+      id: 'wi-312-fathers-day',
+      type: 'feature',
+      name: 'Father\'s Day LiveOps',
+      podId: 'pod-tp',
+      startDate: '2026-04-14',
+      endDate: '2026-05-12',
+      requiredMinDaysPerWeek: 1,
+      releaseDate: '2026-05-12',
+      notes: '3.12 Release — LiveOps. Pre-Pro. Producer: Casey.',
+    },
+    {
+      id: 'wi-312-independence-day',
+      type: 'feature',
+      name: 'Independence Day LiveOps',
+      podId: 'pod-ww',
+      startDate: '2026-04-14',
+      endDate: '2026-05-12',
+      requiredMinDaysPerWeek: 1,
+      releaseDate: '2026-05-12',
+      notes: '3.12 Release — LiveOps. Pre-Pro. Producer: Casey.',
+    },
+
+    // ============================================================
+    // Server Release 76.0.0 (TBD) — Feature Freeze: 2/24
+    // ============================================================
+    {
+      id: 'wi-srv76-text-limit',
+      type: 'feature',
+      name: '[SERVER] Validate text limit on text field',
+      podId: 'pod-ss',
+      startDate: '2026-02-24',
+      endDate: '2026-03-13',
+      requiredMinDaysPerWeek: 1,
+      jiraKey: 'WSU-36174',
+      notes: 'Server Release 76.0.0 — Done. Producer: Alec.',
+    },
+    {
+      id: 'wi-srv76-d2c-award',
+      type: 'feature',
+      name: 'D2C doesn\'t grant award on dev environment',
+      podId: 'pod-ss',
+      startDate: '2026-02-24',
+      endDate: '2026-03-13',
+      requiredMinDaysPerWeek: 2,
+      jiraKey: 'WSU-37065',
+      notes: 'Server Release 76.0.0 — In QA. At risk. Producer: Alec.',
+    },
+    {
+      id: 'wi-srv76-persistent-help',
+      type: 'feature',
+      name: 'Investigate persistent help request issue',
+      podId: 'pod-ss',
+      startDate: '2026-02-24',
+      endDate: '2026-03-13',
+      requiredMinDaysPerWeek: 2,
+      jiraKey: 'WSU-37048',
+      notes: 'Server Release 76.0.0 — In QA. At risk. Producer: Alec.',
+    },
+    {
+      id: 'wi-srv76-help-request-overhaul',
+      type: 'feature',
+      name: '[Chat Improvements] Help Request Overhaul (Server)',
+      podId: 'pod-ss',
+      startDate: '2026-02-24',
+      endDate: '2026-03-13',
+      requiredMinDaysPerWeek: 2,
+      jiraKey: 'WSU-34670',
+      notes: 'Server Release 76.0.0 — In QA. At risk. Producer: Alec.',
+    },
+    {
+      id: 'wi-srv76-help-unit-tests',
+      type: 'feature',
+      name: 'Help improvements - Unit and Integration Tests',
+      podId: 'pod-ss',
+      startDate: '2026-02-24',
+      endDate: '2026-03-13',
+      requiredMinDaysPerWeek: 1,
+      jiraKey: 'WSU-35492',
+      notes: 'Server Release 76.0.0 — Done. Producer: Alec.',
+    },
+    {
+      id: 'wi-srv76-announcements',
+      type: 'feature',
+      name: 'Implement Ability to display an Announcement',
+      podId: 'pod-ss',
+      startDate: '2026-02-24',
+      endDate: '2026-03-13',
+      requiredMinDaysPerWeek: 1,
+      jiraKey: 'WSU-35358',
+      notes: 'Server Release 76.0.0 — Done. Producer: Alec.',
     },
   ];
 }
 
-export function generateSeedAllocations(workItems: WorkItem[]): Allocation[] {
-  const allocations: Allocation[] = [];
-  const personWorkItemCount: Record<string, Set<string>> = {};
-
-  function addAlloc(personId: string, workItemId: string, date: string) {
-    allocations.push({
-      id: makeId(),
-      personId,
-      workItemId,
-      date,
-      days: 1,
-    });
-    if (!personWorkItemCount[personId]) {
-      personWorkItemCount[personId] = new Set();
-    }
-    personWorkItemCount[personId].add(workItemId);
-  }
-
-  // Helper: get weekdays within a work item's range
-  function getWIDays(wi: WorkItem): string[] {
-    return getWeekdaysInRange(
-      new Date(wi.startDate),
-      new Date(wi.endDate)
-    ).map(toDateStr);
-  }
-
-  const wiMap: Record<string, WorkItem> = {};
-  for (const wi of workItems) {
-    wiMap[wi.id] = wi;
-  }
-
-  // ---- Assign leads to their pod's work items ----
-  // Emily helps across pods (mainly SS which is overloaded)
-  const ssLogin = wiMap['wi-ss-1'];
-  const ssApi = wiMap['wi-ss-2'];
-  const ssLoad = wiMap['wi-ss-3'];
-  const ssDb = wiMap['wi-ss-4'];
-
-  // Kawika on TINPOZ + ServerScapes
-  const tpNotif = wiMap['wi-tp-1'];
-  const tpPush = wiMap['wi-tp-2'];
-
-  // Assign Kawika: 3 days/week on Notification, then split
-  {
-    const days = getWIDays(tpNotif);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 3) addAlloc('person-kawika', 'wi-tp-1', d);
-      count++;
-    }
-  }
-  {
-    const days = getWIDays(ssLogin);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 >= 3) addAlloc('person-kawika', 'wi-ss-1', d);
-      count++;
-    }
-  }
-
-  // Emily: split across SS items (overloaded to create risk)
-  {
-    const days = getWIDays(ssLogin);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 2) addAlloc('person-emily', 'wi-ss-1', d);
-      count++;
-    }
-  }
-  {
-    const days = getWIDays(ssDb);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 >= 2 && count % 5 < 4) addAlloc('person-emily', 'wi-ss-4', d);
-      count++;
-    }
-  }
-  {
-    const days = getWIDays(ssApi);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 === 4) addAlloc('person-emily', 'wi-ss-2', d);
-      count++;
-    }
-  }
-
-  // Izzy on Pod Squad items
-  {
-    const days = getWIDays(wiMap['wi-ps-1']);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 3) addAlloc('person-izzy', 'wi-ps-1', d);
-      count++;
-    }
-  }
-  {
-    const days = getWIDays(wiMap['wi-ps-2']);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 2) addAlloc('person-izzy', 'wi-ps-2', d);
-      count++;
-    }
-  }
-
-  // Lionel on Lalo items
-  {
-    const days = getWIDays(wiMap['wi-la-1']);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 3) addAlloc('person-lionel', 'wi-la-1', d);
-      count++;
-    }
-  }
-  {
-    const days = getWIDays(wiMap['wi-la-2']);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 >= 3 && count % 5 < 5) addAlloc('person-lionel', 'wi-la-2', d);
-      count++;
-    }
-  }
-
-  // TBH on Word Wizards
-  {
-    const days = getWIDays(wiMap['wi-ww-1']);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 2) addAlloc('person-tbh', 'wi-ww-1', d);
-      count++;
-    }
-  }
-  {
-    const days = getWIDays(wiMap['wi-ww-3']);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 >= 2 && count % 5 < 4) addAlloc('person-tbh', 'wi-ww-3', d);
-      count++;
-    }
-  }
-
-  // ---- Vendor tester assignments ----
-  // Distribute vendors across work items to achieve ~70-80% capacity
-  // Also create context switching risk for a few vendors
-
-  // Vendors 01-04: SS Login Migration (heavy staffing)
-  for (let v = 1; v <= 4; v++) {
-    const vid = `person-vendor-${String(v).padStart(2, '0')}`;
-    const days = getWIDays(ssLogin);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 4) addAlloc(vid, 'wi-ss-1', d);
-      count++;
-    }
-  }
-
-  // Vendors 05-06: SS Database Sharding
-  for (let v = 5; v <= 6; v++) {
-    const vid = `person-vendor-${String(v).padStart(2, '0')}`;
-    const days = getWIDays(ssDb);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 3) addAlloc(vid, 'wi-ss-4', d);
-      count++;
-    }
-  }
-
-  // Vendors 07-08: SS API Gateway
-  for (let v = 7; v <= 8; v++) {
-    const vid = `person-vendor-${String(v).padStart(2, '0')}`;
-    const days = getWIDays(ssApi);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 3) addAlloc(vid, 'wi-ss-2', d);
-      count++;
-    }
-  }
-
-  // Vendor 09: SS Load Testing
-  {
-    const vid = 'person-vendor-09';
-    const days = getWIDays(ssLoad);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 3) addAlloc(vid, 'wi-ss-3', d);
-      count++;
-    }
-  }
-
-  // Vendors 10-12: Pod Squad Dashboard
-  for (let v = 10; v <= 12; v++) {
-    const vid = `person-vendor-${String(v).padStart(2, '0')}`;
-    const days = getWIDays(wiMap['wi-ps-1']);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 3) addAlloc(vid, 'wi-ps-1', d);
-      count++;
-    }
-  }
-
-  // Vendors 13-14: Pod Squad User Profile
-  for (let v = 13; v <= 14; v++) {
-    const vid = `person-vendor-${String(v).padStart(2, '0')}`;
-    const days = getWIDays(wiMap['wi-ps-2']);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 3) addAlloc(vid, 'wi-ps-2', d);
-      count++;
-    }
-  }
-
-  // Vendors 15-16: TINPOZ Notification System
-  for (let v = 15; v <= 16; v++) {
-    const vid = `person-vendor-${String(v).padStart(2, '0')}`;
-    const days = getWIDays(tpNotif);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 3) addAlloc(vid, 'wi-tp-1', d);
-      count++;
-    }
-  }
-
-  // Vendor 17: TINPOZ Push Integration
-  {
-    const vid = 'person-vendor-17';
-    const days = getWIDays(tpPush);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 3) addAlloc(vid, 'wi-tp-2', d);
-      count++;
-    }
-  }
-
-  // Vendors 18-20: Word Wizards Spell Check
-  for (let v = 18; v <= 20; v++) {
-    const vid = `person-vendor-${String(v).padStart(2, '0')}`;
-    const days = getWIDays(wiMap['wi-ww-1']);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 3) addAlloc(vid, 'wi-ww-1', d);
-      count++;
-    }
-  }
-
-  // Vendors 21-22: Lalo Payment Flow
-  for (let v = 21; v <= 22; v++) {
-    const vid = `person-vendor-${String(v).padStart(2, '0')}`;
-    const days = getWIDays(wiMap['wi-la-1']);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 3) addAlloc(vid, 'wi-la-1', d);
-      count++;
-    }
-  }
-
-  // Vendor 23: Lalo Fraud Detection
-  {
-    const vid = 'person-vendor-23';
-    const days = getWIDays(wiMap['wi-la-2']);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 2) addAlloc(vid, 'wi-la-2', d);
-      count++;
-    }
-  }
-
-  // Vendors 24-25: Context switching overload - assigned to many items
-  // Vendor 24 gets spread across 5 different work items (context switching risk)
-  {
-    const vid = 'person-vendor-24';
-    const items = ['wi-ss-1', 'wi-ss-2', 'wi-ss-4', 'wi-tp-1', 'wi-ps-1'];
-    for (const wiId of items) {
-      const wi = wiMap[wiId];
-      if (!wi) continue;
-      const days = getWIDays(wi);
-      // Assign 1 day per week per item
-      let weekCount = 0;
-      for (let i = 0; i < days.length; i++) {
-        const dayOfWeek = i % 5;
-        if (dayOfWeek === items.indexOf(wiId)) {
-          addAlloc(vid, wiId, days[i]);
-        }
-      }
-    }
-  }
-
-  // Vendor 25: Also spread thin - 6 items (red context switching risk)
-  {
-    const vid = 'person-vendor-25';
-    const items = ['wi-ss-1', 'wi-ss-2', 'wi-ss-3', 'wi-ss-4', 'wi-tp-1', 'wi-la-1'];
-    for (const wiId of items) {
-      const wi = wiMap[wiId];
-      if (!wi) continue;
-      const days = getWIDays(wi);
-      for (let i = 0; i < days.length; i++) {
-        const dayOfWeek = i % 6;
-        if (dayOfWeek === items.indexOf(wiId) && i % 5 < 5) {
-          addAlloc(vid, wiId, days[i]);
-        }
-      }
-    }
-  }
-
-  // Vendors 28-30: Emily's floating testers — assigned to central QA tasks + cross-pod work
-  // Vendor 28: QA Regression Suite Maintenance (central QA task)
-  {
-    const vid = 'person-vendor-28';
-    const days = getWIDays(wiMap['wi-qa-1']);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 3) addAlloc(vid, 'wi-qa-1', d);
-      count++;
-    }
-  }
-
-  // Vendor 29: Split between QA Regression Suite + PS Accessibility Audit
-  {
-    const vid = 'person-vendor-29';
-    const days = getWIDays(wiMap['wi-qa-1']);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 2) addAlloc(vid, 'wi-qa-1', d);
-      count++;
-    }
-  }
-  {
-    const vid = 'person-vendor-29';
-    const days = getWIDays(wiMap['wi-ps-3']);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 >= 2 && count % 5 < 4) addAlloc(vid, 'wi-ps-3', d);
-      count++;
-    }
-  }
-
-  // Vendor 30: QA Test Automation Framework + LA Fraud Detection
-  {
-    const vid = 'person-vendor-30';
-    const days = getWIDays(wiMap['wi-qa-2']);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 < 2) addAlloc(vid, 'wi-qa-2', d);
-      count++;
-    }
-  }
-  {
-    const vid = 'person-vendor-30';
-    const days = getWIDays(wiMap['wi-la-2']);
-    let count = 0;
-    for (const d of days) {
-      if (count % 5 >= 2 && count % 5 < 4) addAlloc(vid, 'wi-la-2', d);
-      count++;
-    }
-  }
-
-  // Intentionally leave WW Grammar Engine v2 and PS Accessibility Audit under-staffed
-  // (vendor 28 and 29 help but not enough) to create coverage risk
-
-  return allocations;
+// No auto-generated allocations — team will plan manually
+export function generateSeedAllocations(_workItems: WorkItem[]): Allocation[] {
+  return [];
 }
 
+// No auto-generated time offs — team will add their own
 export function generateSeedTimeOffs(): TimeOff[] {
-  const timeOffs: TimeOff[] = [];
-  // Give a few people time off to create capacity gaps
-  const w2Mon = addWeeks(ws, 1);
-  const w2Days = getWeekdaysInRange(w2Mon, addDays(w2Mon, 4));
-
-  // Kawika out for 2 days in week 2
-  if (w2Days.length >= 2) {
-    timeOffs.push({
-      id: makeId(),
-      personId: 'person-kawika',
-      date: toDateStr(w2Days[0]),
-      reason: 'Conference',
-    });
-    timeOffs.push({
-      id: makeId(),
-      personId: 'person-kawika',
-      date: toDateStr(w2Days[1]),
-      reason: 'Conference',
-    });
-  }
-
-  // Vendor 01 out for a day in week 1
-  const w1Days = getWeekdaysInRange(ws, addDays(ws, 4));
-  if (w1Days.length >= 3) {
-    timeOffs.push({
-      id: makeId(),
-      personId: 'person-vendor-01',
-      date: toDateStr(w1Days[2]),
-      reason: 'Personal day',
-    });
-  }
-
-  return timeOffs;
+  return [];
 }
 
 export const basePlanScenario: Scenario = {

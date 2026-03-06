@@ -32,6 +32,7 @@ export interface WorkItem {
   requiredMinDaysPerWeek: number;
   releaseDate?: string;
   notes?: string;
+  jiraKey?: string; // e.g. 'WSU-33450' — links to Jira ticket
 }
 
 export interface Allocation {

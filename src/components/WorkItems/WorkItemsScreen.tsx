@@ -166,18 +166,34 @@ export function WorkItemsScreen() {
               />
             </div>
           </div>
-          <div className="form-group">
-            <label>Notes</label>
-            <textarea
-              value={editing.notes || ''}
-              onChange={(e) =>
-                setEditing({
-                  ...editing,
-                  notes: e.target.value || undefined,
-                })
-              }
-              rows={3}
-            />
+          <div className="form-row">
+            <div className="form-group">
+              <label>Notes</label>
+              <textarea
+                value={editing.notes || ''}
+                onChange={(e) =>
+                  setEditing({
+                    ...editing,
+                    notes: e.target.value || undefined,
+                  })
+                }
+                rows={3}
+              />
+            </div>
+            <div className="form-group">
+              <label>Jira Key (optional)</label>
+              <input
+                type="text"
+                placeholder="e.g. WSU-33450"
+                value={editing.jiraKey || ''}
+                onChange={(e) =>
+                  setEditing({
+                    ...editing,
+                    jiraKey: e.target.value || undefined,
+                  })
+                }
+              />
+            </div>
           </div>
           <div className="form-actions">
             <button className="btn btn--primary" onClick={handleSave}>
@@ -206,7 +222,21 @@ export function WorkItemsScreen() {
         <tbody>
           {workItems.map((wi) => (
             <tr key={wi.id}>
-              <td>{wi.name}</td>
+              <td>
+                {wi.name}
+                {wi.jiraKey && (
+                  <a
+                    href={`https://peoplefun.atlassian.net/browse/${wi.jiraKey}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="jira-link"
+                    title={wi.jiraKey}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {wi.jiraKey}
+                  </a>
+                )}
+              </td>
               <td>{wi.type}</td>
               <td>{getPodName(pods, wi.podId)}</td>
               <td>{formatDate(fromDateStr(wi.startDate))}</td>

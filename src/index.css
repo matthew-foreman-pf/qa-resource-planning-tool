@@ -1412,6 +1412,24 @@ h4 {
   max-width: 1100px;
 }
 
+.jira-link {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 5px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-radius: 3px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-decoration: none;
+  vertical-align: middle;
+}
+.jira-link:hover {
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+}
+
 .wi-form {
   background: var(--surface);
   border: 1px solid var(--border-subtle);

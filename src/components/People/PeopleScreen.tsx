@@ -186,14 +186,12 @@ export function PeopleScreen() {
             Manage team members, roles, and pod assignments.
           </p>
         </div>
-        {isEditor && (
-          <button
-            className="btn btn--primary btn--add-person"
-            onClick={openAddPersonDrawer}
-          >
-            + Add Team Member
-          </button>
-        )}
+        <button
+          className="btn btn--primary btn--add-person"
+          onClick={openAddPersonDrawer}
+        >
+          + Add Team Member
+        </button>
       </div>
 
       {/* Toolbar: search + filters */}

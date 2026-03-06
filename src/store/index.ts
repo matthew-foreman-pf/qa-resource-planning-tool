@@ -184,40 +184,13 @@ export const useStore = create<AppState>((set, get) => ({
       const existingRealm = await db.table('realms').get(TEAM_REALM_ID);
       const scenarioCount = await db.scenarios.count();
 
-      if (!existingRealm && scenarioCount === 0) {
-        // First user: create team realm + seed data
-        const cp = cloudProps();
-
+      // Ensure realm, roles, and invites exist
+      if (!existingRealm) {
         await db.table('realms').put({
           realmId: TEAM_REALM_ID,
           name: 'QA Team Planning',
           owner: db.cloud.currentUserId,
         });
-
-        // Add realm roles so all members can read/write
-        try {
-          await db.table('roles').bulkPut([
-            {
-              realmId: TEAM_REALM_ID,
-              name: 'admin',
-              permissions: {
-                add: ['*'],
-                update: { '*': ['*'] },
-                manage: ['*'],
-              },
-            },
-            {
-              realmId: TEAM_REALM_ID,
-              name: 'editor',
-              permissions: {
-                add: ['*'],
-                update: { '*': ['*'] },
-              },
-            },
-          ]);
-        } catch {
-          // roles may already exist
-        }
 
         await db.table('members').add({
           realmId: TEAM_REALM_ID,
@@ -226,21 +199,60 @@ export const useStore = create<AppState>((set, get) => ({
           roles: ['admin'],
           accepted: new Date(),
         });
+      }
 
-        // Auto-invite team members
-        for (const email of TEAM_EMAILS) {
-          try {
-            await db.table('members').add({
-              realmId: TEAM_REALM_ID,
-              email,
-              invite: true,
-              roles: ['editor'],
-            });
-          } catch {
-            // ignore duplicates
-          }
+      // Add realm roles so all members can read/write
+      try {
+        await db.table('roles').bulkPut([
+          {
+            realmId: TEAM_REALM_ID,
+            name: 'admin',
+            permissions: {
+              add: ['*'],
+              update: { '*': ['*'] },
+              manage: ['*'],
+            },
+          },
+          {
+            realmId: TEAM_REALM_ID,
+            name: 'editor',
+            permissions: {
+              add: ['*'],
+              update: { '*': ['*'] },
+            },
+          },
+        ]);
+      } catch {
+        // roles may already exist
+      }
+
+      // Auto-invite team members who aren't yet invited
+      const members = await db.table('members').toArray();
+      const invitedEmails = new Set(
+        members
+          .filter((m: any) => m.realmId === TEAM_REALM_ID)
+          .map((m: any) => m.email?.toLowerCase())
+          .filter(Boolean)
+      );
+      const missingEmails = TEAM_EMAILS.filter(
+        (e) => !invitedEmails.has(e.toLowerCase())
+      );
+      for (const email of missingEmails) {
+        try {
+          await db.table('members').add({
+            realmId: TEAM_REALM_ID,
+            email,
+            invite: true,
+            roles: ['editor'],
+          });
+        } catch {
+          // ignore duplicates
         }
+      }
 
+      // Seed data if no scenarios exist (first user or after reset)
+      if (scenarioCount === 0) {
+        const cp = cloudProps();
         await db.pods.bulkPut(seedPods.map((p) => ({ ...p, ...cp })));
         await db.people.bulkPut(seedPeople.map((p) => ({ ...p, ...cp })));
         await db.scenarios.put({ ...basePlanScenario, ...cp });
@@ -259,48 +271,6 @@ export const useStore = create<AppState>((set, get) => ({
         await db.timeOffs.bulkPut(
           timeOffs.map((to) => ({ ...to, scenarioId: 'scenario-base', ...cp }))
         );
-      } else if (existingRealm) {
-        // Ensure roles exist (may be missing from earlier setup)
-        try {
-          await db.table('roles').bulkPut([
-            {
-              realmId: TEAM_REALM_ID,
-              name: 'admin',
-              permissions: { add: ['*'], update: { '*': ['*'] }, manage: ['*'] },
-            },
-            {
-              realmId: TEAM_REALM_ID,
-              name: 'editor',
-              permissions: { add: ['*'], update: { '*': ['*'] } },
-            },
-          ]);
-        } catch {
-          // roles may already exist
-        }
-
-        // Auto-invite team members who aren't yet invited
-        const members = await db.table('members').toArray();
-        const invitedEmails = new Set(
-          members
-            .filter((m: any) => m.realmId === TEAM_REALM_ID)
-            .map((m: any) => m.email?.toLowerCase())
-            .filter(Boolean)
-        );
-        const missingEmails = TEAM_EMAILS.filter(
-          (e) => !invitedEmails.has(e.toLowerCase())
-        );
-        for (const email of missingEmails) {
-          try {
-            await db.table('members').add({
-              realmId: TEAM_REALM_ID,
-              email,
-              invite: true,
-              roles: ['editor'],
-            });
-          } catch {
-            // ignore duplicates
-          }
-        }
       }
     } else {
       // Local-only mode: seed exactly as before

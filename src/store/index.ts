@@ -27,6 +27,84 @@ function cloudProps(): Record<string, string> {
   return { realmId: TEAM_REALM_ID };
 }
 
+/** Seed the database with initial demo data */
+async function seedDatabase() {
+  const cp = cloudProps();
+  await db.pods.bulkPut(seedPods.map((p) => ({ ...p, ...cp })));
+  await db.people.bulkPut(seedPeople.map((p) => ({ ...p, ...cp })));
+  await db.scenarios.put({ ...basePlanScenario, ...cp });
+
+  const workItems = generateSeedWorkItems();
+  await db.workItems.bulkPut(
+    workItems.map((wi) => ({ ...wi, scenarioId: 'scenario-base', ...cp }))
+  );
+
+  const allocations = generateSeedAllocations(workItems);
+  await db.allocations.bulkPut(
+    allocations.map((a) => ({ ...a, scenarioId: 'scenario-base', ...cp }))
+  );
+
+  const timeOffs = generateSeedTimeOffs();
+  await db.timeOffs.bulkPut(
+    timeOffs.map((to) => ({ ...to, scenarioId: 'scenario-base', ...cp }))
+  );
+}
+
+/**
+ * Wait for Dexie Cloud initial sync to complete before making seeding decisions.
+ * Returns true if sync completed successfully, false on error/timeout.
+ */
+function waitForSync(timeoutMs = 15000): Promise<boolean> {
+  if (!isCloudEnabled) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      sub?.unsubscribe();
+      resolve(false); // timed out — don't seed to avoid overwriting server data
+    }, timeoutMs);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sub = (db as any).cloud.syncState.subscribe((state: any) => {
+      if (state?.phase === 'in-sync') {
+        clearTimeout(timer);
+        sub.unsubscribe();
+        resolve(true);
+      } else if (state?.phase === 'error') {
+        clearTimeout(timer);
+        sub.unsubscribe();
+        resolve(false);
+      }
+    });
+  });
+}
+
+/**
+ * Subscribe to Dexie Cloud sync state and refresh Zustand state when sync
+ * brings new data. This ensures the UI always reflects the latest DB state,
+ * even when cloud sync updates data after the initial load.
+ */
+let syncListenerActive = false;
+function setupSyncListener() {
+  if (syncListenerActive || !isCloudEnabled) return;
+  syncListenerActive = true;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (db as any).cloud.syncState.subscribe((state: any) => {
+    if (state?.phase === 'in-sync') {
+      // Refresh global data
+      Promise.all([
+        db.pods.toArray(),
+        db.people.toArray(),
+        db.scenarios.toArray(),
+      ]).then(([pods, people, scenarios]) => {
+        useStore.setState({ pods, people, scenarios });
+      });
+      // Refresh scenario-specific data
+      const { currentScenarioId } = useStore.getState();
+      useStore.getState().loadScenarioData(currentScenarioId);
+    }
+  });
+}
+
 interface AppState {
   // Data
   pods: Pod[];
@@ -180,11 +258,16 @@ export const useStore = create<AppState>((set, get) => ({
 
   initialize: async () => {
     if (isCloudEnabled) {
-      // Cloud mode: check if team realm exists (synced from cloud)
+      // Wait for Dexie Cloud initial sync to complete before making seeding
+      // decisions. Without this, a fresh session (empty local DB) would see
+      // scenarioCount === 0 and re-seed, overwriting the user's real data
+      // on the cloud server.
+      const syncOk = await waitForSync();
+
       const existingRealm = await db.table('realms').get(TEAM_REALM_ID);
       const scenarioCount = await db.scenarios.count();
 
-      // Ensure realm, roles, and invites exist
+      // Create realm if it doesn't exist
       if (!existingRealm) {
         await db.table('realms').put({
           realmId: TEAM_REALM_ID,
@@ -250,50 +333,19 @@ export const useStore = create<AppState>((set, get) => ({
         }
       }
 
-      // Seed data if no scenarios exist (first user or after reset)
-      if (scenarioCount === 0) {
-        const cp = cloudProps();
-        await db.pods.bulkPut(seedPods.map((p) => ({ ...p, ...cp })));
-        await db.people.bulkPut(seedPeople.map((p) => ({ ...p, ...cp })));
-        await db.scenarios.put({ ...basePlanScenario, ...cp });
-
-        const workItems = generateSeedWorkItems();
-        await db.workItems.bulkPut(
-          workItems.map((wi) => ({ ...wi, scenarioId: 'scenario-base', ...cp }))
-        );
-
-        const allocations = generateSeedAllocations(workItems);
-        await db.allocations.bulkPut(
-          allocations.map((a) => ({ ...a, scenarioId: 'scenario-base', ...cp }))
-        );
-
-        const timeOffs = generateSeedTimeOffs();
-        await db.timeOffs.bulkPut(
-          timeOffs.map((to) => ({ ...to, scenarioId: 'scenario-base', ...cp }))
-        );
+      // Only seed if sync confirmed there is truly no data on the server.
+      // If sync failed/timed out, skip seeding to avoid overwriting server data.
+      if (scenarioCount === 0 && syncOk) {
+        await seedDatabase();
       }
+
+      // Subscribe to future sync completions to refresh UI reactively
+      setupSyncListener();
     } else {
       // Local-only mode: seed exactly as before
       const scenarioCount = await db.scenarios.count();
       if (scenarioCount === 0) {
-        await db.pods.bulkPut(seedPods);
-        await db.people.bulkPut(seedPeople);
-        await db.scenarios.put(basePlanScenario);
-
-        const workItems = generateSeedWorkItems();
-        await db.workItems.bulkPut(
-          workItems.map((wi) => ({ ...wi, scenarioId: 'scenario-base' }))
-        );
-
-        const allocations = generateSeedAllocations(workItems);
-        await db.allocations.bulkPut(
-          allocations.map((a) => ({ ...a, scenarioId: 'scenario-base' }))
-        );
-
-        const timeOffs = generateSeedTimeOffs();
-        await db.timeOffs.bulkPut(
-          timeOffs.map((to) => ({ ...to, scenarioId: 'scenario-base' }))
-        );
+        await seedDatabase();
       }
     }
 
@@ -1008,7 +1060,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   resetData: async () => {
-    // Clear all tables
+    // Clear all data tables
     await db.pods.clear();
     await db.people.clear();
     await db.scenarios.clear();
@@ -1016,11 +1068,19 @@ export const useStore = create<AppState>((set, get) => ({
     await db.allocations.clear();
     await db.timeOffs.clear();
 
-    // Re-initialize will re-seed from scratch
+    // Seed directly (don't call initialize() — it waits for cloud sync
+    // which would pull stale data before we can seed fresh data)
+    await seedDatabase();
+
+    // Read freshly seeded data from DB
+    const pods = await db.pods.toArray();
+    const people = await db.people.toArray();
+    const scenarios = await db.scenarios.toArray();
+
     set({
-      pods: [],
-      people: [],
-      scenarios: [],
+      pods,
+      people,
+      scenarios,
       workItems: [],
       allocations: [],
       timeOffs: [],
@@ -1037,7 +1097,7 @@ export const useStore = create<AppState>((set, get) => ({
       selectedPersonId: null,
     });
 
-    await get().initialize();
+    await get().loadScenarioData('scenario-base');
   },
 
   inviteTeamMember: async (email) => {

@@ -284,52 +284,64 @@ export const useStore = create<AppState>((set, get) => ({
         });
       }
 
-      // Add realm roles so all members can read/write
-      try {
-        await db.table('roles').bulkPut([
-          {
-            realmId: TEAM_REALM_ID,
-            name: 'admin',
-            permissions: {
-              add: ['*'],
-              update: { '*': ['*'] },
-              manage: ['*'],
-            },
-          },
-          {
-            realmId: TEAM_REALM_ID,
-            name: 'editor',
-            permissions: {
-              add: ['*'],
-              update: { '*': ['*'] },
-            },
-          },
-        ]);
-      } catch {
-        // roles may already exist
-      }
+      // Only the realm owner should manage roles & invites to avoid
+      // rejected mutations from non-owner users poisoning the sync.
+      const isRealmOwner = existingRealm
+        ? existingRealm.owner === db.cloud.currentUserId
+        : true; // we just created it above
 
-      // Auto-invite team members who aren't yet invited
-      const members = await db.table('members').toArray();
-      const invitedEmails = new Set(
-        members
-          .filter((m: any) => m.realmId === TEAM_REALM_ID)
-          .map((m: any) => m.email?.toLowerCase())
-          .filter(Boolean)
-      );
-      const missingEmails = TEAM_EMAILS.filter(
-        (e) => !invitedEmails.has(e.toLowerCase())
-      );
-      for (const email of missingEmails) {
+      if (isRealmOwner) {
+        // Add realm roles so all members can read/write.
+        // Use string '*' wildcards — array ['*'] is NOT a wildcard in
+        // Dexie Cloud's PermissionChecker; it matches only a table
+        // literally named '*'.
         try {
-          await db.table('members').add({
-            realmId: TEAM_REALM_ID,
-            email,
-            invite: true,
-            roles: ['editor'],
-          });
+          await db.table('roles').bulkPut([
+            {
+              realmId: TEAM_REALM_ID,
+              name: 'admin',
+              permissions: {
+                add: '*',
+                update: '*',
+                manage: '*',
+              },
+            },
+            {
+              realmId: TEAM_REALM_ID,
+              name: 'editor',
+              permissions: {
+                add: '*',
+                update: '*',
+                manage: '*',
+              },
+            },
+          ]);
         } catch {
-          // ignore duplicates
+          // roles may already exist
+        }
+
+        // Auto-invite team members who aren't yet invited
+        const members = await db.table('members').toArray();
+        const invitedEmails = new Set(
+          members
+            .filter((m: any) => m.realmId === TEAM_REALM_ID)
+            .map((m: any) => m.email?.toLowerCase())
+            .filter(Boolean)
+        );
+        const missingEmails = TEAM_EMAILS.filter(
+          (e) => !invitedEmails.has(e.toLowerCase())
+        );
+        for (const email of missingEmails) {
+          try {
+            await db.table('members').add({
+              realmId: TEAM_REALM_ID,
+              email,
+              invite: true,
+              roles: ['editor'],
+            });
+          } catch {
+            // ignore duplicates
+          }
         }
       }
 

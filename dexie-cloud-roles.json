@@ -1,0 +1,24 @@
+{
+  "data": {
+    "rlm-team-planning": {
+      "roles": {
+        "[\"rlm-team-planning\",\"admin\"]": {
+          "name": "admin",
+          "permissions": {
+            "add": "*",
+            "update": "*",
+            "manage": "*"
+          }
+        },
+        "[\"rlm-team-planning\",\"editor\"]": {
+          "name": "editor",
+          "permissions": {
+            "add": "*",
+            "update": "*",
+            "manage": "*"
+          }
+        }
+      }
+    }
+  }
+}

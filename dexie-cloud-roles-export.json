@@ -1,0 +1,1374 @@
+{
+  "schema": {
+    "pods": "id",
+    "roles": "[realmId+name]",
+    "people": "id",
+    "realms": "@realmId",
+    "members": "@id",
+    "timeOffs": "id",
+    "scenarios": "id",
+    "workItems": "id",
+    "allocations": "id",
+    "$$logins": "claims.sub",
+    "$$baseRevs": "[tableName+clientRev]"
+  },
+  "sealed": false,
+  "data": {
+    "rlm-team-planning": {
+      "members": {
+        "mmb0Pn6F5XTvxIk__B|AcNGKSOUing": {
+          "name": "Admin",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "admin"
+          ],
+          "userId": "matthew.foreman@peoplefun.com",
+          "accepted": {
+            "$t": "Date",
+            "v": "2026-02-22T16:43:47.855Z"
+          }
+        },
+        "mmb0Pn6F5XUSeNrKyAKnZc7meNPing": {
+          "name": "Admin",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "admin"
+          ],
+          "userId": "matthew.foreman@peoplefun.com",
+          "accepted": {
+            "$t": "Date",
+            "v": "2026-02-22T16:43:47.866Z"
+          }
+        },
+        "mmb0PnlfMo|hvXg7qs4snoebLMning": {
+          "email": "daniella.eguiguren@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "userId": "daniella.eguiguren@peoplefun.com",
+          "accepted": {
+            "$t": "Date",
+            "v": "2026-03-05T13:59:10.512Z"
+          },
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-02T22:26:59.811Z"
+          }
+        },
+        "mmb0PnlfMouwllW7Fdp_a2sAk7iing": {
+          "email": "emily.mccormick@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "userId": "emily.mccormick@peoplefun.com",
+          "accepted": {
+            "$t": "Date",
+            "v": "2026-03-02T22:27:22.095Z"
+          },
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-02T22:26:59.644Z"
+          }
+        },
+        "mmb0PnlfMov70vm3Hc9yzujojOning": {
+          "email": "peter.yiap@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "userId": "peter.yiap@peoplefun.com",
+          "accepted": {
+            "$t": "Date",
+            "v": "2026-03-02T23:00:33.259Z"
+          },
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-02T22:26:59.767Z"
+          }
+        },
+        "mmb0PnlfMoyysK2xTnRIgc90BY3ing": {
+          "email": "adam.brzozowski@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-02T22:26:59.776Z"
+          }
+        },
+        "mmb0PnlfMozzE6SOiqC2RuLGswLing": {
+          "email": "casey.takesue@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "userId": "casey.takesue@peoplefun.com",
+          "accepted": {
+            "$t": "Date",
+            "v": "2026-03-03T01:21:52.395Z"
+          },
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-02T22:26:59.798Z"
+          }
+        },
+        "mmb0PnlfMp0279nsVWv7ZFomDSNing": {
+          "email": "nichole.strano@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "userId": "nichole.strano@peoplefun.com",
+          "accepted": {
+            "$t": "Date",
+            "v": "2026-03-02T22:35:40.819Z"
+          },
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-02T22:26:59.820Z"
+          }
+        },
+        "mmb0PnlfMp1y7_maUscxow1TWlqing": {
+          "email": "alec.bautista@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-02T22:26:59.829Z"
+          }
+        },
+        "mmb0PnyZNqmjz1Nw1ijdYAvvcPving": {
+          "email": "emily.mccormick@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-05T10:31:32.950Z"
+          }
+        },
+        "mmb0PnyZNqnzUK4ufwRsdSx4llEing": {
+          "email": "emily.mccormick@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-05T10:31:32.960Z"
+          }
+        },
+        "mmb0PnyZNqoiMWmVgUP6Mlxt9scing": {
+          "email": "peter.yiap@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-05T10:31:33.132Z"
+          }
+        },
+        "mmb0PnyZNqpdlMzgXNH45V17Tx3ing": {
+          "email": "peter.yiap@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-05T10:31:33.138Z"
+          }
+        },
+        "mmb0PnyZNqrdsvaevvS4qkNBJ3King": {
+          "email": "adam.brzozowski@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-05T10:31:33.146Z"
+          }
+        },
+        "mmb0PnyZNqs_RtmCpRTdg0955qding": {
+          "email": "adam.brzozowski@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-05T10:31:33.152Z"
+          }
+        },
+        "mmb0PnyZNqt|zhMMrSj5AJI5vrSing": {
+          "email": "casey.takesue@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "userId": "casey.takesue@peoplefun.com",
+          "accepted": {
+            "$t": "Date",
+            "v": "2026-03-05T21:27:36.016Z"
+          },
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-05T10:31:33.160Z"
+          }
+        },
+        "mmb0PnyZNquhNiu2B0cBF10KYCXing": {
+          "email": "casey.takesue@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "userId": "casey.takesue@peoplefun.com",
+          "accepted": {
+            "$t": "Date",
+            "v": "2026-03-05T21:27:36.016Z"
+          },
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-05T10:31:33.168Z"
+          }
+        },
+        "mmb0PnyZNqvfVypfCPJgeKpo9Mbing": {
+          "email": "daniella.eguiguren@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "userId": "daniella.eguiguren@peoplefun.com",
+          "accepted": {
+            "$t": "Date",
+            "v": "2026-03-05T13:59:10.512Z"
+          },
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-05T10:31:33.176Z"
+          }
+        },
+        "mmb0PnyZNqweRsS3AqzJbJFT0N2ing": {
+          "email": "daniella.eguiguren@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "userId": "daniella.eguiguren@peoplefun.com",
+          "accepted": {
+            "$t": "Date",
+            "v": "2026-03-05T13:59:10.512Z"
+          },
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-05T10:31:33.184Z"
+          }
+        },
+        "mmb0PnyZNqx2ytnoCsmwfXr8hsWing": {
+          "email": "nichole.strano@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "userId": "nichole.strano@peoplefun.com",
+          "accepted": {
+            "$t": "Date",
+            "v": "2026-03-05T18:02:32.166Z"
+          },
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-05T10:31:33.190Z"
+          }
+        },
+        "mmb0PnyZNqyWSxD|MIFZcXfNb8fing": {
+          "email": "nichole.strano@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "userId": "nichole.strano@peoplefun.com",
+          "accepted": {
+            "$t": "Date",
+            "v": "2026-03-05T18:02:32.166Z"
+          },
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-05T10:31:33.200Z"
+          }
+        },
+        "mmb0PnyZNq|YXnR8M4SG3|KXLF7ing": {
+          "email": "alec.bautista@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-05T10:31:33.213Z"
+          }
+        },
+        "mmb0PnyZNqzj1AnuoNAC55EogoWing": {
+          "email": "alec.bautista@peoplefun.com",
+          "owner": "matthew.foreman@peoplefun.com",
+          "roles": [
+            "editor"
+          ],
+          "invite": true,
+          "invitedBy": {
+            "name": "matthew.foreman@peoplefun.com",
+            "email": "matthew.foreman@peoplefun.com",
+            "userId": "matthew.foreman@peoplefun.com"
+          },
+          "invitedDate": {
+            "$t": "Date",
+            "v": "2026-03-05T10:31:33.206Z"
+          }
+        },
+        "mmb-owner-rlm-team-planning": {
+          "owner": "matthew.foreman@peoplefun.com",
+          "userId": "matthew.foreman@peoplefun.com",
+          "accepted": {
+            "$t": "Date",
+            "v": "2026-02-22T16:43:47.829Z"
+          }
+        }
+      },
+      "allocations": {
+        "1a3df23f-c498-46ff-88f7-03718de0f5c5": {
+          "date": "2026-03-10",
+          "days": 1,
+          "owner": "matthew.foreman@peoplefun.com",
+          "personId": "person-mithun",
+          "scenarioId": "scenario-base",
+          "workItemId": "wi-310-easter-liveops"
+        },
+        "b44e51b2-5f48-45f0-9b60-d79d2253d78e": {
+          "date": "2026-03-09",
+          "days": 1,
+          "owner": "matthew.foreman@peoplefun.com",
+          "personId": "person-gagan",
+          "scenarioId": "scenario-base",
+          "workItemId": "wi-310-fast-play-abt"
+        }
+      },
+      "people": {
+        "person-abhishek": {
+          "name": "Abhishek R",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-tbh",
+          "status": "active",
+          "homePodId": "pod-ww",
+          "weeklyCapacityDays": 5
+        },
+        "person-ajith": {
+          "name": "Ajith",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-lionel",
+          "status": "active",
+          "homePodId": "pod-la",
+          "weeklyCapacityDays": 5
+        },
+        "person-akhila": {
+          "name": "Akhila M S",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-lionel",
+          "status": "active",
+          "homePodId": "pod-la",
+          "weeklyCapacityDays": 5
+        },
+        "person-emily": {
+          "name": "Emily",
+          "role": "qa_lead",
+          "type": "internal",
+          "owner": "matthew.foreman@peoplefun.com",
+          "status": "active",
+          "weeklyCapacityDays": 5
+        },
+        "person-gagan": {
+          "name": "Gagan B L",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-izzy",
+          "status": "active",
+          "homePodId": "pod-ps",
+          "weeklyCapacityDays": 5
+        },
+        "person-gowtham": {
+          "name": "Gowtham",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-izzy",
+          "status": "active",
+          "homePodId": "pod-ps",
+          "weeklyCapacityDays": 5
+        },
+        "person-izzy": {
+          "name": "Izzy",
+          "role": "pod_lead",
+          "type": "internal",
+          "owner": "matthew.foreman@peoplefun.com",
+          "status": "active",
+          "homePodId": "pod-ps",
+          "weeklyCapacityDays": 5,
+          "defaultPodFilterIds": [
+            "pod-ps"
+          ]
+        },
+        "person-jayanth": {
+          "name": "Jayanth R",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-izzy",
+          "status": "active",
+          "homePodId": "pod-ps",
+          "weeklyCapacityDays": 5
+        },
+        "person-kawika": {
+          "name": "Kawika",
+          "role": "pod_lead",
+          "type": "internal",
+          "owner": "matthew.foreman@peoplefun.com",
+          "status": "active",
+          "homePodId": "pod-tp",
+          "weeklyCapacityDays": 5,
+          "defaultPodFilterIds": [
+            "pod-tp",
+            "pod-ss"
+          ]
+        },
+        "person-lionel": {
+          "name": "Lionel",
+          "role": "pod_lead",
+          "type": "internal",
+          "owner": "matthew.foreman@peoplefun.com",
+          "status": "active",
+          "homePodId": "pod-la",
+          "weeklyCapacityDays": 5,
+          "defaultPodFilterIds": [
+            "pod-la"
+          ]
+        },
+        "person-lokeswar-reddy": {
+          "name": "Lokeswar Reddy",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-lionel",
+          "status": "active",
+          "homePodId": "pod-la",
+          "weeklyCapacityDays": 5
+        },
+        "person-madiki-uday": {
+          "name": "Madiki Uday",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-lionel",
+          "status": "active",
+          "homePodId": "pod-la",
+          "weeklyCapacityDays": 5
+        },
+        "person-manikanta": {
+          "name": "Manikanta Varma Datla",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-lionel",
+          "status": "active",
+          "homePodId": "pod-la",
+          "weeklyCapacityDays": 5
+        },
+        "person-mithun": {
+          "name": "Mithun",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-kawika",
+          "status": "active",
+          "homePodId": "pod-tp",
+          "weeklyCapacityDays": 5
+        },
+        "person-momin": {
+          "name": "Momin",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-kawika",
+          "status": "active",
+          "homePodId": "pod-tp",
+          "weeklyCapacityDays": 5
+        },
+        "person-mukesh": {
+          "name": "Mukesh M",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-tbh",
+          "status": "active",
+          "homePodId": "pod-ww",
+          "weeklyCapacityDays": 5
+        },
+        "person-ram-prasath": {
+          "name": "Ram Prasath S",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-tbh",
+          "status": "active",
+          "homePodId": "pod-ww",
+          "weeklyCapacityDays": 5
+        },
+        "person-sabarinathan": {
+          "name": "Sabarinathan",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-tbh",
+          "status": "active",
+          "homePodId": "pod-ww",
+          "weeklyCapacityDays": 5
+        },
+        "person-sai-ram": {
+          "name": "Sai Ram",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-kawika",
+          "status": "active",
+          "homePodId": "pod-tp",
+          "weeklyCapacityDays": 5
+        },
+        "person-sathish": {
+          "name": "Sathish V",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-kawika",
+          "status": "active",
+          "homePodId": "pod-tp",
+          "weeklyCapacityDays": 5
+        },
+        "person-shiva-kiran": {
+          "name": "Shiva Kiran",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-kawika",
+          "status": "active",
+          "homePodId": "pod-tp",
+          "weeklyCapacityDays": 5
+        },
+        "person-shreekantacharya": {
+          "name": "Shreekantacharya",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-izzy",
+          "status": "active",
+          "homePodId": "pod-ps",
+          "weeklyCapacityDays": 5
+        },
+        "person-siranjeevi": {
+          "name": "Siranjeevi",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-tbh",
+          "status": "active",
+          "homePodId": "pod-ww",
+          "weeklyCapacityDays": 5
+        },
+        "person-srivalli": {
+          "name": "Srivalli",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-kawika",
+          "status": "active",
+          "homePodId": "pod-tp",
+          "weeklyCapacityDays": 5
+        },
+        "person-srujan": {
+          "name": "Srujan",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-kawika",
+          "status": "active",
+          "homePodId": "pod-tp",
+          "weeklyCapacityDays": 5
+        },
+        "person-sudeep": {
+          "name": "Sudeep M",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-izzy",
+          "status": "active",
+          "homePodId": "pod-ps",
+          "weeklyCapacityDays": 5
+        },
+        "person-tbh": {
+          "name": "TBH",
+          "role": "pod_lead",
+          "type": "internal",
+          "owner": "matthew.foreman@peoplefun.com",
+          "status": "active",
+          "homePodId": "pod-ww",
+          "weeklyCapacityDays": 5,
+          "defaultPodFilterIds": [
+            "pod-ww"
+          ]
+        },
+        "person-thanush": {
+          "name": "Thanush",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-lionel",
+          "status": "active",
+          "homePodId": "pod-la",
+          "weeklyCapacityDays": 5
+        },
+        "person-vishweshwar": {
+          "name": "Vishweshwar R",
+          "role": "tester",
+          "type": "vendor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "leadId": "person-lionel",
+          "status": "active",
+          "homePodId": "pod-la",
+          "weeklyCapacityDays": 5
+        }
+      },
+      "pods": {
+        "pod-la": {
+          "name": "Lalo",
+          "owner": "matthew.foreman@peoplefun.com"
+        },
+        "pod-ps": {
+          "name": "Pod Squad",
+          "owner": "matthew.foreman@peoplefun.com"
+        },
+        "pod-qa": {
+          "name": "QA Pool",
+          "owner": "matthew.foreman@peoplefun.com"
+        },
+        "pod-ss": {
+          "name": "ServerScapes",
+          "owner": "matthew.foreman@peoplefun.com"
+        },
+        "pod-tp": {
+          "name": "TINPOZ",
+          "owner": "matthew.foreman@peoplefun.com"
+        },
+        "pod-ww": {
+          "name": "Word Wizards",
+          "owner": "matthew.foreman@peoplefun.com"
+        }
+      },
+      "realms": {
+        "rlm-team-planning": {
+          "name": "QA Team Planning",
+          "owner": "matthew.foreman@peoplefun.com"
+        }
+      },
+      "roles": {
+        "[\"rlm-team-planning\",\"admin\"]": {
+          "name": "admin",
+          "owner": "matthew.foreman@peoplefun.com",
+          "permissions": {
+            "add": [
+              "*"
+            ],
+            "manage": [
+              "*"
+            ],
+            "update": {
+              "*": [
+                "*"
+              ]
+            }
+          }
+        },
+        "[\"rlm-team-planning\",\"editor\"]": {
+          "name": "editor",
+          "owner": "matthew.foreman@peoplefun.com",
+          "permissions": {
+            "add": [
+              "*"
+            ],
+            "update": {
+              "*": [
+                "*"
+              ]
+            }
+          }
+        }
+      },
+      "scenarios": {
+        "scenario-base": {
+          "name": "Base Plan",
+          "owner": "matthew.foreman@peoplefun.com",
+          "isBase": true
+        }
+      },
+      "workItems": {
+        "wi-310-adjust-sdk": {
+          "name": "Adjust SDK Update for 3.10.0",
+          "type": "initiative",
+          "notes": "3.10 Release — SDK update. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-la",
+          "endDate": "2026-03-23",
+          "jiraKey": "WSU-34770",
+          "startDate": "2026-01-21",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-03-23",
+          "requiredMinDaysPerWeek": 1
+        },
+        "wi-310-april-fools": {
+          "name": "April Fools LiveOps (Apr 1)",
+          "type": "feature",
+          "notes": "3.10 Release — LiveOps. Event goes live Apr 1. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ps",
+          "endDate": "2026-03-23",
+          "startDate": "2026-02-04",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-03-23",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-310-chronicle-announcements": {
+          "name": "Chronicle Support for Announcements",
+          "type": "feature",
+          "notes": "3.10 Release — Minor feature. Producer: Matt.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-tp",
+          "endDate": "2026-03-23",
+          "jiraKey": "WSU-35411",
+          "startDate": "2026-01-26",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-03-23",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-310-chronicle-offers": {
+          "name": "Chronicle Support for Offers",
+          "type": "feature",
+          "notes": "3.10 Release — Minor feature. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-la",
+          "endDate": "2026-03-23",
+          "jiraKey": "WSU-36045",
+          "startDate": "2026-02-17",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-03-23",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-310-curated-ftue": {
+          "name": "Daily Puzzle: Curated FTUE",
+          "type": "feature",
+          "notes": "3.10 Release — Major feature. Producer: Daniella.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ps",
+          "endDate": "2026-03-23",
+          "jiraKey": "WSU-33450",
+          "startDate": "2026-01-23",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-03-23",
+          "requiredMinDaysPerWeek": 3
+        },
+        "wi-310-earth-day": {
+          "name": "Earth Day LiveOps (Apr 12)",
+          "type": "feature",
+          "notes": "3.10 Release — LiveOps. Event goes live Apr 12. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-tp",
+          "endDate": "2026-03-23",
+          "startDate": "2026-02-04",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-03-23",
+          "requiredMinDaysPerWeek": 1
+        },
+        "wi-310-easter-liveops": {
+          "name": "Easter LiveOps (Mar 30)",
+          "type": "feature",
+          "notes": "3.10 Release — LiveOps. Event goes live Mar 30. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ww",
+          "endDate": "2026-03-23",
+          "startDate": "2026-02-03",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-03-23",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-310-fast-play-abt": {
+          "name": "Fast Play ABT",
+          "type": "feature",
+          "notes": "3.10 Release — ABT. Producer: Matt.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ww",
+          "endDate": "2026-03-23",
+          "jiraKey": "WSU-36196",
+          "startDate": "2026-02-23",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-03-23",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-310-help-request-overhaul": {
+          "name": "[Chat Improvements] Help Request Overhaul",
+          "type": "feature",
+          "notes": "3.10 Release — Minor feature. Producer: Matt.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-tp",
+          "endDate": "2026-03-23",
+          "jiraKey": "WSU-34670",
+          "startDate": "2026-01-30",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-03-23",
+          "requiredMinDaysPerWeek": 3
+        },
+        "wi-310-helpshift-reports": {
+          "name": "Update Helpshift CS reports (ad network + CRID)",
+          "type": "initiative",
+          "notes": "3.10 Release — Platform. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-qa",
+          "endDate": "2026-03-23",
+          "jiraKey": "WSU-31618",
+          "startDate": "2026-01-22",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-03-23",
+          "requiredMinDaysPerWeek": 1
+        },
+        "wi-310-inflatable-man-pet": {
+          "name": "Wacky Inflatable Man Engagement Pet (Apr 1)",
+          "type": "feature",
+          "notes": "3.10 Release — LiveOps. Event goes live Apr 1. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-la",
+          "endDate": "2026-03-23",
+          "startDate": "2026-02-12",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-03-23",
+          "requiredMinDaysPerWeek": 1
+        },
+        "wi-310-mountain-climb-abt": {
+          "name": "Mountain Climb Rewards ABT",
+          "type": "feature",
+          "notes": "3.10 Release — ABT. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ps",
+          "endDate": "2026-03-23",
+          "jiraKey": "WSU-33489",
+          "startDate": "2026-01-27",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-03-23",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-310-offer-group-type": {
+          "name": "Create new offer group type for low priority announcements",
+          "type": "feature",
+          "notes": "3.10 Release — Bug-fixing. Producer: Daniella.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-la",
+          "endDate": "2026-03-23",
+          "jiraKey": "WSU-36687",
+          "startDate": "2026-02-27",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-03-23",
+          "requiredMinDaysPerWeek": 1
+        },
+        "wi-310-pt-core-ads": {
+          "name": "PT Core 3.0.0 & PT Ads 1.1.1 Updates",
+          "type": "initiative",
+          "notes": "3.10 Release — Platform. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-qa",
+          "endDate": "2026-03-23",
+          "jiraKey": "WSU-36066",
+          "startDate": "2026-02-13",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-03-23",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-310-q2-mt-fortune": {
+          "name": "Q2 Mt. Fortune (Underwater) (Apr 1)",
+          "type": "feature",
+          "notes": "3.10 Release — LiveOps. Event goes live Apr 1. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-tp",
+          "endDate": "2026-03-23",
+          "startDate": "2026-02-12",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-03-23",
+          "requiredMinDaysPerWeek": 1
+        },
+        "wi-310-remote-content": {
+          "name": "Remote Content Delivery",
+          "type": "feature",
+          "notes": "3.10 Release — Major feature. Producer: Matt.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ww",
+          "endDate": "2026-03-23",
+          "startDate": "2026-02-02",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-03-23",
+          "requiredMinDaysPerWeek": 3
+        },
+        "wi-310-store-badging-abt": {
+          "name": "LiveOps ABTs: Store badging audit",
+          "type": "feature",
+          "notes": "3.10 Release — ABT. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-la",
+          "endDate": "2026-03-23",
+          "jiraKey": "WSU-32338",
+          "startDate": "2026-01-21",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-03-23",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-310-ui-consistency": {
+          "name": "UI Consistency Pass: Mt Fortune",
+          "type": "feature",
+          "notes": "3.10 Release — Minor feature. Producer: Daniella.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ps",
+          "endDate": "2026-03-23",
+          "jiraKey": "WSU-33606",
+          "startDate": "2026-01-28",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-03-23",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-311-att-opt-in": {
+          "name": "ATT Opt-in Redesign",
+          "type": "feature",
+          "notes": "3.11 Release — Minor feature. In Dev. Producer: Matt.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ps",
+          "endDate": "2026-04-14",
+          "jiraKey": "WSU-35048",
+          "startDate": "2026-03-11",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-04-14",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-311-chat-qol": {
+          "name": "Chat QOL Fixes & Improvements - Join/Kick/Remove",
+          "type": "feature",
+          "notes": "3.11 Release — Minor feature. Pre-Pro. Producer: Matt.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-tp",
+          "endDate": "2026-04-14",
+          "jiraKey": "WSU-35846",
+          "startDate": "2026-03-13",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-04-14",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-311-daily-gift-theming": {
+          "name": "Daily Gift Theming & Simplified Daily Gift Widget",
+          "type": "feature",
+          "notes": "3.11 Release — Minor feature. In Dev. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ww",
+          "endDate": "2026-04-14",
+          "jiraKey": "WSU-32344",
+          "startDate": "2026-03-06",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-04-14",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-311-mothers-day": {
+          "name": "Mother's Day LiveOps (May 4)",
+          "type": "feature",
+          "notes": "3.11 Release — LiveOps. In QA. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ps",
+          "endDate": "2026-04-14",
+          "startDate": "2026-03-06",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-04-14",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-311-picnic-day": {
+          "name": "Picnic Day LiveOps (May 17)",
+          "type": "feature",
+          "notes": "3.11 Release — LiveOps. In QA. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ww",
+          "endDate": "2026-04-14",
+          "startDate": "2026-03-06",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-04-14",
+          "requiredMinDaysPerWeek": 1
+        },
+        "wi-311-pt-core-ads": {
+          "name": "PT Core & PT Ads Updates for 3.11.0",
+          "type": "initiative",
+          "notes": "3.11 Release — Platform. Pre-Pro. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-qa",
+          "endDate": "2026-04-14",
+          "jiraKey": "WSU-36897",
+          "startDate": "2026-03-20",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-04-14",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-311-summer-daily-goals": {
+          "name": "Summer 1-3 Daily Goals with Michael's Tooling (Jun 1)",
+          "type": "feature",
+          "notes": "3.11 Release — LiveOps. In QA. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-tp",
+          "endDate": "2026-04-14",
+          "startDate": "2026-03-06",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-04-14",
+          "requiredMinDaysPerWeek": 1
+        },
+        "wi-311-summer-sand-castle": {
+          "name": "[Summer] Sand Castle Crowns (Jun 1)",
+          "type": "feature",
+          "notes": "3.11 Release — LiveOps. In QA. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-la",
+          "endDate": "2026-04-14",
+          "startDate": "2026-03-05",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-04-14",
+          "requiredMinDaysPerWeek": 1
+        },
+        "wi-311-team-remove-revamp": {
+          "name": "TeamRemove Revamp - Ghost players & redis cleanup",
+          "type": "feature",
+          "notes": "3.11 Release — Minor feature. In Dev. Producer: Matt.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ss",
+          "endDate": "2026-04-14",
+          "jiraKey": "WSU-35850",
+          "startDate": "2026-03-16",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-04-14",
+          "requiredMinDaysPerWeek": 3
+        },
+        "wi-311-tiered-no-ads-abt": {
+          "name": "Tiered No Ads x New Players ABT",
+          "type": "feature",
+          "notes": "3.11 Release — Minor feature. In Dev. Producer: Daniella.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-la",
+          "endDate": "2026-04-14",
+          "startDate": "2026-03-06",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-04-14",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-312-9th-wordscapes-day": {
+          "name": "9th Wordscapes Day LiveOps",
+          "type": "feature",
+          "notes": "3.12 Release — LiveOps. Pre-Pro. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ps",
+          "endDate": "2026-05-12",
+          "startDate": "2026-04-14",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-05-12",
+          "requiredMinDaysPerWeek": 1
+        },
+        "wi-312-cow-pet": {
+          "name": "Cow Engagement Pet",
+          "type": "feature",
+          "notes": "3.12 Release — LiveOps. Pre-Pro. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-la",
+          "endDate": "2026-05-12",
+          "startDate": "2026-04-14",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-05-12",
+          "requiredMinDaysPerWeek": 1
+        },
+        "wi-312-fathers-day": {
+          "name": "Father's Day LiveOps",
+          "type": "feature",
+          "notes": "3.12 Release — LiveOps. Pre-Pro. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-tp",
+          "endDate": "2026-05-12",
+          "startDate": "2026-04-14",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-05-12",
+          "requiredMinDaysPerWeek": 1
+        },
+        "wi-312-independence-day": {
+          "name": "Independence Day LiveOps",
+          "type": "feature",
+          "notes": "3.12 Release — LiveOps. Pre-Pro. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ww",
+          "endDate": "2026-05-12",
+          "startDate": "2026-04-14",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-05-12",
+          "requiredMinDaysPerWeek": 1
+        },
+        "wi-312-pt-core-ads": {
+          "name": "PT Core and PT Ads Updates for 3.12.0",
+          "type": "initiative",
+          "notes": "3.12 Release — Platform. Pre-Pro. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-qa",
+          "endDate": "2026-05-12",
+          "startDate": "2026-04-20",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-05-12",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-312-wildlife-levels": {
+          "name": "Wildlife Level Expansion",
+          "type": "feature",
+          "notes": "3.12 Release — Major feature. In Dev. At risk. Producer: Casey.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ww",
+          "endDate": "2026-05-12",
+          "startDate": "2026-04-14",
+          "scenarioId": "scenario-base",
+          "releaseDate": "2026-05-12",
+          "requiredMinDaysPerWeek": 3
+        },
+        "wi-392-d2c-appcharge": {
+          "name": "[D2C][Shop][AppCharge] IAP rewards missing on hard close",
+          "type": "feature",
+          "notes": "3.9.2 Hotfix — Bug-fixing. Producer: Daniella.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-la",
+          "endDate": "2026-03-14",
+          "jiraKey": "WSU-37051",
+          "startDate": "2026-03-03",
+          "scenarioId": "scenario-base",
+          "requiredMinDaysPerWeek": 3
+        },
+        "wi-srv76-announcements": {
+          "name": "Implement Ability to display an Announcement",
+          "type": "feature",
+          "notes": "Server Release 76.0.0 — Done. Producer: Alec.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ss",
+          "endDate": "2026-03-13",
+          "jiraKey": "WSU-35358",
+          "startDate": "2026-02-24",
+          "scenarioId": "scenario-base",
+          "requiredMinDaysPerWeek": 1
+        },
+        "wi-srv76-d2c-award": {
+          "name": "D2C doesn't grant award on dev environment",
+          "type": "feature",
+          "notes": "Server Release 76.0.0 — In QA. At risk. Producer: Alec.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ss",
+          "endDate": "2026-03-13",
+          "jiraKey": "WSU-37065",
+          "startDate": "2026-02-24",
+          "scenarioId": "scenario-base",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-srv76-help-request-overhaul": {
+          "name": "[Chat Improvements] Help Request Overhaul (Server)",
+          "type": "feature",
+          "notes": "Server Release 76.0.0 — In QA. At risk. Producer: Alec.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ss",
+          "endDate": "2026-03-13",
+          "jiraKey": "WSU-34670",
+          "startDate": "2026-02-24",
+          "scenarioId": "scenario-base",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-srv76-help-unit-tests": {
+          "name": "Help improvements - Unit and Integration Tests",
+          "type": "feature",
+          "notes": "Server Release 76.0.0 — Done. Producer: Alec.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ss",
+          "endDate": "2026-03-13",
+          "jiraKey": "WSU-35492",
+          "startDate": "2026-02-24",
+          "scenarioId": "scenario-base",
+          "requiredMinDaysPerWeek": 1
+        },
+        "wi-srv76-persistent-help": {
+          "name": "Investigate persistent help request issue",
+          "type": "feature",
+          "notes": "Server Release 76.0.0 — In QA. At risk. Producer: Alec.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ss",
+          "endDate": "2026-03-13",
+          "jiraKey": "WSU-37048",
+          "startDate": "2026-02-24",
+          "scenarioId": "scenario-base",
+          "requiredMinDaysPerWeek": 2
+        },
+        "wi-srv76-text-limit": {
+          "name": "[SERVER] Validate text limit on text field",
+          "type": "feature",
+          "notes": "Server Release 76.0.0 — Done. Producer: Alec.",
+          "owner": "matthew.foreman@peoplefun.com",
+          "podId": "pod-ss",
+          "endDate": "2026-03-13",
+          "jiraKey": "WSU-36174",
+          "startDate": "2026-02-24",
+          "scenarioId": "scenario-base",
+          "requiredMinDaysPerWeek": 1
+        }
+      }
+    },
+    "rlm-public": {
+      "realms": {
+        "rlm-public": {
+          "name": "public",
+          "owner": "rlm-public"
+        }
+      }
+    }
+  }
+}

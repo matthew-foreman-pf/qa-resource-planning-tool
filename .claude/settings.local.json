@@ -7,7 +7,25 @@
       "Bash(npx vite build:*)",
       "Bash(npx vite)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(gh repo create:*)",
+      "Bash(brew list:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(ssh-keygen:*)",
+      "Bash(ssh:*)",
+      "Bash(lsof:*)",
+      "Bash(curl:*)",
+      "Bash(npx vite:*)",
+      "Bash(npm run build:*)",
+      "Bash(xargs kill:*)",
+      "WebFetch(domain:dexie.org)",
+      "Bash(npx dexie-cloud import dexie-cloud-roles.json)",
+      "Bash(npx dexie-cloud import --help)",
+      "WebSearch",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

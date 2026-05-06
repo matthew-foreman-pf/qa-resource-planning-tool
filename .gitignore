@@ -4,3 +4,6 @@ dist
 *.local
 dexie-cloud.json
 dexie-cloud.key
+
+# TypeScript incremental build artifact
+*.tsbuildinfo
